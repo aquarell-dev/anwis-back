@@ -1,1 +1,1 @@
-web: gunicorn anwis.anwis.wsgi
+web: gunicorn anwis.wsgi
