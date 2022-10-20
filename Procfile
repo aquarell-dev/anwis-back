@@ -1,1 +1,1 @@
-web: gunicorn anwis.wsgi
+web: sh -c 'cd ./anwis/ && gunicorn anwis.wsgi'
