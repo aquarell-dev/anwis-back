@@ -4,13 +4,11 @@ from datetime import timedelta
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 SECRET_KEY = 'django-insecure-9jac1sp!=he74jeb68%%@3!do=sp1d7)u3(3!_#9fav9=d^#9u'
 
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']  # DEBUG only
-
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -26,9 +24,9 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
 ]
 
-
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     'django.contrib.sessions.middleware.SessionMiddleware',
     "corsheaders.middleware.CorsMiddleware",
     'django.middleware.common.CommonMiddleware',
@@ -40,20 +38,17 @@ MIDDLEWARE = [
 
 CORS_ALLOW_CREDENTIALS = True
 
-
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:8080",
     "http://127.0.0.1:3000",
     'http://localhost:3000',
 ]
 
-
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     )
 }
-
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
@@ -87,9 +82,7 @@ SIMPLE_JWT = {
     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
 }
 
-
 ROOT_URLCONF = 'anwis.urls'
-
 
 TEMPLATES = [
     {
@@ -107,9 +100,7 @@ TEMPLATES = [
     },
 ]
 
-
 WSGI_APPLICATION = 'anwis.wsgi.application'
-
 
 DATABASES = {
     'default': {
@@ -117,7 +108,6 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -134,7 +124,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 LANGUAGE_CODE = 'en-us'
 
 TIME_ZONE = 'UTC'
@@ -142,7 +131,6 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 
 USE_TZ = True
-
 
 STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
