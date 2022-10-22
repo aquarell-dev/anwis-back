@@ -5,34 +5,34 @@ from.models import ChinaDistributor, Product, OrderForProject, Order, Status, In
 
 @admin.register(Status)
 class StatusAdmin(admin.ModelAdmin):
-    list_display = [field.name for field in Status._meta.get_fields()]
+    list_display = [field.name for field in Status._meta.get_fields() if field.name not in ['order']]
     list_display_links = ['id']
     search_fields = ['id', 'status']
 
 
 @admin.register(ChinaDistributor)
-class StatusAdmin(admin.ModelAdmin):
-    list_display = [field.name for field in ChinaDistributor._meta.get_fields()]
+class ChinaDistributorAdmin(admin.ModelAdmin):
+    list_display = [field.name for field in ChinaDistributor._meta.get_fields() if field.name not in ['order']]
     list_display_links = ['id']
     search_fields = ['id', 'china_distributor']
 
 
 @admin.register(OrderForProject)
-class StatusAdmin(admin.ModelAdmin):
-    list_display = [field.name for field in OrderForProject._meta.get_fields()]
+class OrderForProjectAdmin(admin.ModelAdmin):
+    list_display = [field.name for field in OrderForProject._meta.get_fields() if field.name not in ['order']]
     list_display_links = ['id']
     search_fields = ['id', 'order_for_project']
 
 
 @admin.register(IndividualEntrepreneur)
-class StatusAdmin(admin.ModelAdmin):
-    list_display = [field.name for field in IndividualEntrepreneur._meta.get_fields()]
+class IndividualEntrepreneurAdmin(admin.ModelAdmin):
+    list_display = [field.name for field in IndividualEntrepreneur._meta.get_fields() if field.name not in ['order']]
     list_display_links = ['id']
     search_fields = ['id', 'individual_entrepreneur']
 
 
 @admin.register(Order)
-class StatusAdmin(admin.ModelAdmin):
+class OrderAdmin(admin.ModelAdmin):
     list_display = [field.name for field in Order._meta.get_fields()]
     list_display_links = ['id']
     search_fields = ['id']
