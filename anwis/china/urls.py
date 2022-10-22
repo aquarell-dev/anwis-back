@@ -5,8 +5,8 @@ from .views import OrderListCreateView, ChinaDistributorView, OrderForProjectVie
 
 urlpatterns = [
     path('orders/', OrderListCreateView.as_view()),
-    path('china-distributor/', ChinaDistributorView.as_view()),
-    path('order-for-project/', OrderForProjectView.as_view()),
-    path('status/', StatusView.as_view()),
-    path('individual-entrepreneur/', IndividualEntrepreneurView.as_view()),
+    path('china-distributors/', ChinaDistributorView.as_view()),
+    path('order-for-projects/', OrderForProjectView.as_view()),
+    path('statuses/', StatusView.as_view()),
+    path('individual-entrepreneurs/', IndividualEntrepreneurView.as_view()),
 ]
