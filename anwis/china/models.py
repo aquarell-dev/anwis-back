@@ -48,9 +48,11 @@ class Status(models.Model):
 
 class Product(models.Model):
     title = models.CharField('Название товара', max_length=100, unique=True)
+    article = models.PositiveBigIntegerField('Артикул')
     price_cny = models.DecimalField('Цена в юанях', decimal_places=2, max_digits=6)
     cny_to_rub_course = models.DecimalField('Курс юаня к рублю', decimal_places=2, max_digits=6)
     price_rub = models.DecimalField('Цена в рублях', decimal_places=2, max_digits=6, editable=False)
+    photo = models.ImageField('Картинка', upload_to='images/')
 
     def save(self, *args, **kwargs):
         self.price_rub = self.price_cny * self.cny_to_rub_course
@@ -78,7 +80,7 @@ class Order(models.Model):
     draft = models.BooleanField('Черновик', default=False)
     commentary = models.TextField('Комментарий', null=True, blank=True)
 
-    # products = models.ManyToManyField(Product, verbose_name='Товары')  # quantity for each, calc prices
+    products = models.ManyToManyField(Product, verbose_name='Товары')  # quantity for each, calc prices
 
     def __str__(self):
         return f'Заказ №{self.id}'

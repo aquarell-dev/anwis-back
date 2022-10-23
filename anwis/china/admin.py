@@ -1,5 +1,6 @@
 from django.contrib import admin
 
+from utils.mixins import ImagePreviewMixin
 from.models import ChinaDistributor, Product, OrderForProject, Order, Status, IndividualEntrepreneur
 
 
@@ -33,7 +34,15 @@ class IndividualEntrepreneurAdmin(admin.ModelAdmin):
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = [field.name for field in Order._meta.get_fields()]
+    list_display = [field.name for field in Order._meta.get_fields() if field.name not in ['products']]
     list_display_links = ['id']
     search_fields = ['id']
     list_filter = ['draft']
+
+
+@admin.register(Product)
+class ProductAdmin(ImagePreviewMixin, admin.ModelAdmin):
+    list_display = [field.name for field in Product._meta.get_fields() if field.name not in ['order']] + [
+        'preview_image'
+    ]
+    list_display_links = ['id']

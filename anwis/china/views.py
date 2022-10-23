@@ -1,9 +1,13 @@
 from rest_framework import generics
-from rest_framework.response import Response
 
 from .models import ChinaDistributor, Product, OrderForProject, Order, Status, IndividualEntrepreneur
 from .serializer import ChinaSerializer, OrderForProjectSerializer, StatusSerializer, OrderCreateUpdateSerializer, \
-    OrderListRetrieveSerializer, IndividualEntrepreneurSerializer
+    OrderListRetrieveSerializer, IndividualEntrepreneurSerializer, ProductSerializer
+
+
+class ProductListCreateView(generics.ListCreateAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
 
 
 class OrderListCreateView(generics.ListCreateAPIView):

@@ -42,3 +42,9 @@ class OrderCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         exclude = ('draft',)
         model = Order
+
+
+class ProductSerializer(serializers.ModelSerializer):
+    class Meta:
+        fields = '__all__'
+        model = Product
