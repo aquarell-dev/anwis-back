@@ -59,7 +59,7 @@ class Product(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return str(self.id)
+        return f'{self.article}, {self.title}'
 
     class Meta:
         verbose_name = 'Товар'
