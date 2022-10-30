@@ -36,7 +36,9 @@ class OrderForProject(models.Model):
 
 class Status(models.Model):
     status = models.CharField('Статус', unique=True, max_length=50)
-    icon = None
+    color = models.CharField('Цвет', max_length=40, help_text='Цвет в jsx формате')
+    hover_color = models.CharField('Цвет при наведении на блок', max_length=40, help_text='Цвет в jsx формате')
+    photo = models.ImageField('Иконка', upload_to='images/')
 
     def __str__(self):
         return str(self.status)
@@ -46,17 +48,23 @@ class Status(models.Model):
         verbose_name_plural = 'Статусы'
 
 
+class Category(models.Model):
+    category = models.CharField('Категория', unique=True, max_length=60)
+
+    def __str__(self):
+        return self.category
+
+    class Meta:
+        verbose_name = 'Категория'
+        verbose_name_plural = 'Категории'
+
+
 class Product(models.Model):
     title = models.CharField('Название товара', max_length=100, unique=True)
     article = models.PositiveBigIntegerField('Артикул')
-    price_cny = models.DecimalField('Цена в юанях', decimal_places=2, max_digits=6)
-    cny_to_rub_course = models.DecimalField('Курс юаня к рублю', decimal_places=2, max_digits=6)
-    price_rub = models.DecimalField('Цена в рублях', decimal_places=2, max_digits=6, editable=False)
     photo = models.ImageField('Картинка', upload_to='images/')
-
-    def save(self, *args, **kwargs):
-        self.price_rub = self.price_cny * self.cny_to_rub_course
-        super().save(*args, **kwargs)
+    category = models.ForeignKey(Category, verbose_name='Категория', on_delete=models.CASCADE, default=1, blank=True,
+                                 null=True)
 
     def __str__(self):
         return f'{self.article}, {self.title}'
@@ -64,6 +72,34 @@ class Product(models.Model):
     class Meta:
         verbose_name = 'Товар'
         verbose_name_plural = 'Товары'
+
+
+class ProductQuantity(models.Model):
+    quantity = models.PositiveSmallIntegerField('Кол-во товаров')
+    product = models.ForeignKey(Product, verbose_name='Продукт', on_delete=models.CASCADE)
+    price_cny = models.DecimalField('Цена в юанях', decimal_places=2, max_digits=12, default=0)
+    cny_to_rub_course = models.DecimalField('Курс юаня к рублю', decimal_places=2, max_digits=12, default=0)
+    price_rub = models.DecimalField('Цена в рублях', decimal_places=2, max_digits=12, default=0)
+    additional_expenses = models.DecimalField('Доп. расходы в рублях', decimal_places=2, max_digits=12, default=0)
+
+    def __str__(self):
+        return f'Продукт - {self.product.title}, кол-во - {self.quantity}'
+
+    class Meta:
+        verbose_name = 'Продукт/кол-во'
+        verbose_name_plural = 'Продукты/кол-ва'
+
+
+class Task(models.Model):
+    task = models.TextField('Задача')
+    datetime = models.DateTimeField('Дата и время')
+
+    def __str__(self):
+        return str(self.id)
+
+    class Meta:
+        verbose_name = 'Задача'
+        verbose_name_plural = 'Задачи'
 
 
 class Order(models.Model):
@@ -74,16 +110,26 @@ class Order(models.Model):
                                           on_delete=models.CASCADE)
     order_for_project = models.ForeignKey(OrderForProject, verbose_name='Заказ под проект',
                                           on_delete=models.CASCADE)
-    photo = None
     status = models.ForeignKey(Status, verbose_name='Статус',
                                on_delete=models.CASCADE)
     draft = models.BooleanField('Черновик', default=False)
     commentary = models.TextField('Комментарий', null=True, blank=True)
+    date = models.DateTimeField('Дата и время', auto_now_add=True)
+    custom_id = models.CharField('Кастомное айди', editable=False, max_length=10)
+    tasks = models.ManyToManyField(Task, verbose_name='Задачи', blank=True)
+    total_cny = models.DecimalField('Сумма в юанях', decimal_places=2, max_digits=12, default=0)
+    total_rub = models.DecimalField('Сумма в юанях', decimal_places=2, max_digits=12, default=0)
+    total_expenses = models.DecimalField('Доп. расходы в рублях', decimal_places=2, max_digits=12, default=0)
+    total_quantity = models.PositiveIntegerField('Кол-во товаров', default=0)
 
-    products = models.ManyToManyField(Product, verbose_name='Товары')  # quantity for each, calc prices
+    products = models.ManyToManyField(ProductQuantity, verbose_name='Товары')
 
     def __str__(self):
         return f'Заказ №{self.id}'
+
+    def save(self, *args, **kwargs):
+        self.custom_id = '0' * (4 - len(str(self.id))) + str(self.id)
+        return super().save(*args, **kwargs)
 
     class Meta:
         verbose_name = 'Заказ'

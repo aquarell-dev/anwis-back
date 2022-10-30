@@ -1,8 +1,8 @@
 from rest_framework import generics
 
-from .models import ChinaDistributor, Product, OrderForProject, Order, Status, IndividualEntrepreneur
+from .models import ChinaDistributor, Product, OrderForProject, Order, Status, IndividualEntrepreneur, Category, Task
 from .serializer import ChinaSerializer, OrderForProjectSerializer, StatusSerializer, OrderCreateUpdateSerializer, \
-    OrderListRetrieveSerializer, IndividualEntrepreneurSerializer, ProductSerializer
+    OrderListRetrieveSerializer, IndividualEntrepreneurSerializer, ProductSerializer, CategorySerializer, TaskSerializer
 
 
 class ProductListCreateView(generics.ListCreateAPIView):
@@ -11,12 +11,22 @@ class ProductListCreateView(generics.ListCreateAPIView):
 
 
 class OrderListCreateView(generics.ListCreateAPIView):
-    queryset = Order.objects.filter(draft=False)
+    queryset = Order.objects.all()
 
     def get_serializer_class(self):
         if self.request.method == 'POST':
             return OrderCreateUpdateSerializer
         return OrderListRetrieveSerializer
+
+
+class OrderRetrieveView(generics.RetrieveAPIView):
+    queryset = Order.objects.all()
+    serializer_class = OrderListRetrieveSerializer
+
+
+class OrderUpdateView(generics.UpdateAPIView):
+    queryset = Order.objects.all()
+    serializer_class = OrderCreateUpdateSerializer
 
 
 class StatusView(generics.ListCreateAPIView):
@@ -37,3 +47,13 @@ class OrderForProjectView(generics.ListCreateAPIView):
 class IndividualEntrepreneurView(generics.ListCreateAPIView):
     queryset = IndividualEntrepreneur.objects.all()
     serializer_class = IndividualEntrepreneurSerializer
+
+
+class CategoryListCreateView(generics.ListCreateAPIView):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+
+
+class TaskListCreateView(generics.ListCreateAPIView):
+    queryset = Task.objects.all()
+    serializer_class = TaskSerializer
