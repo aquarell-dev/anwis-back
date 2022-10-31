@@ -121,6 +121,7 @@ class Order(models.Model):
     total_rub = models.DecimalField('Сумма в юанях', decimal_places=2, max_digits=12, default=0)
     total_expenses = models.DecimalField('Доп. расходы в рублях', decimal_places=2, max_digits=12, default=0)
     total_quantity = models.PositiveIntegerField('Кол-во товаров', default=0)
+    ready_date = models.DateField('Время изготовления', null=True, blank=True)
 
     products = models.ManyToManyField(ProductQuantity, verbose_name='Товары')
 
