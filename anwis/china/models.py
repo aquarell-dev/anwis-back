@@ -122,6 +122,12 @@ class Order(models.Model):
     total_expenses = models.DecimalField('Доп. расходы в рублях', decimal_places=2, max_digits=12, default=0)
     total_quantity = models.PositiveIntegerField('Кол-во товаров', default=0)
     ready_date = models.DateField('Время изготовления', null=True, blank=True)
+    cargo_number = models.PositiveIntegerField('Номер Доставки', null=True, blank=True)
+    cargo_weight = models.PositiveIntegerField('Вес карго', null=True, blank=True)
+    cargo_volume = models.PositiveIntegerField('Объем карго', null=True, blank=True)
+    price_per_kg = models.PositiveIntegerField('Цена за кг, $', null=True, blank=True)
+    package_price = models.PositiveIntegerField('Цена упаковки, $', null=True, blank=True)
+    total_delivery = models.PositiveIntegerField('Цена за доствку, $', null=True, blank=True)
 
     products = models.ManyToManyField(ProductQuantity, verbose_name='Товары')
 
