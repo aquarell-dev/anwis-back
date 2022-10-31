@@ -22,7 +22,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
 
-    'china.apps.ChinaConfig'
+    'china.apps.ChinaConfig',
+    'leftover.apps.LeftoverConfig',
 ]
 
 MIDDLEWARE = [
