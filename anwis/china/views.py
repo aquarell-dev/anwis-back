@@ -24,6 +24,14 @@ class OrderRetrieveView(generics.RetrieveAPIView):
     serializer_class = OrderListRetrieveSerializer
 
 
+class OrderPartialUpdateView(generics.UpdateAPIView):
+    queryset = Order.objects.all()
+    serializer_class = OrderCreateUpdateSerializer
+
+    def put(self, request, *args, **kwargs):
+        return self.partial_update(request, *args, **kwargs)
+
+
 class OrderUpdateView(generics.UpdateAPIView):
     queryset = Order.objects.all()
     serializer_class = OrderCreateUpdateSerializer

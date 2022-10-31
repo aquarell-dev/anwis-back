@@ -82,18 +82,6 @@ class OrderCreateUpdateSerializer(WritableNestedModelSerializer, serializers.Mod
         fields = '__all__'
         model = Order
 
-    # def create(self, validated_data):
-    #     products = validated_data.pop('products')
-    #
-    #     order = Order(**validated_data)
-    #
-    #     order.save()
-    #
-    #     for product in products:
-    #         order.products.create(**product)
-    #
-    #     return order
-
 
 class OrderRetrieveSerializer(serializers.ModelSerializer):
     class Meta:
