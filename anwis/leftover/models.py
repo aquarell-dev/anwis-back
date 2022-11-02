@@ -13,6 +13,7 @@ class LeftOver(models.Model):
     nm = models.CharField('Номер товара', unique=True, max_length=64, editable=False)
     products = models.ManyToManyField(LeftOverDetailedData, verbose_name='Детальные данные', blank=True,
                                            editable=False)
+    total = models.PositiveIntegerField('Всего товара', default=0)
 
     def save(self, *args, **kwargs):
         return super().save(*args, **kwargs)

@@ -27,8 +27,13 @@ class LeftOverSerializer(serializers.ModelSerializer):
             title=leftover_data.title,
         )
 
+        total = 0
+
         for detail in leftover_data.leftovers:
+            total += detail.quantity
             leftover.products.create(title=detail.title, quantity=detail.quantity)
+
+        leftover.total = total
 
         leftover.save()
 

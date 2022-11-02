@@ -56,6 +56,9 @@ class LeftOverService:
         products = response['data']['products']
 
         for leftover in LeftOver.objects.all():
+
+            total = 0
+
             for product in products:
                 if leftover.nm == str(product['id']):
                     leftover.products.all().delete()
@@ -63,4 +66,9 @@ class LeftOverService:
                     detailed = self._parse_leftover_specs(product)
 
                     for detail in detailed:
+                        total += detail.quantity
                         leftover.products.create(title=detail.title, quantity=detail.quantity)
+
+            leftover.total = total
+
+            leftover.save()
