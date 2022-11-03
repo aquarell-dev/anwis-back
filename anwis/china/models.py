@@ -119,6 +119,7 @@ class Order(models.Model):
     tasks = models.ManyToManyField(Task, verbose_name='Задачи', blank=True)
     total_cny = models.DecimalField('Сумма в юанях', decimal_places=2, max_digits=12, default=0)
     total_rub = models.DecimalField('Сумма в юанях', decimal_places=2, max_digits=12, default=0)
+    course = models.DecimalField('Курс', decimal_places=2, max_digits=12, default=0)
     total_expenses = models.DecimalField('Доп. расходы в рублях', decimal_places=2, max_digits=12, default=0)
     total_quantity = models.PositiveIntegerField('Кол-во товаров', default=0)
     ready_date = models.DateField('Время изготовления', null=True, blank=True)
@@ -130,6 +131,7 @@ class Order(models.Model):
     price_per_kg = models.DecimalField('Цена за кг, $', decimal_places=2, max_digits=12, default=0)
     package_price = models.DecimalField('Цена упаковки, $', decimal_places=2, max_digits=12, default=0)
     total_delivery = models.DecimalField('Цена за доствку, $', decimal_places=2, max_digits=12, default=0)
+    delivered = models.BooleanField('Доставлен', default=False)
 
     products = models.ManyToManyField(ProductQuantity, verbose_name='Товары')
 
