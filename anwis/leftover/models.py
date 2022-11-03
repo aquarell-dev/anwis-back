@@ -11,9 +11,13 @@ class LeftOver(models.Model):
     url = models.URLField('Ссылка на товар')
     photo_url = models.URLField('Ссылка на фото товара')
     nm = models.CharField('Номер товара', unique=True, max_length=64, editable=False)
-    products = models.ManyToManyField(LeftOverDetailedData, verbose_name='Детальные данные', blank=True,
+    products = models.ManyToManyField(LeftOverDetailedData, verbose_name='Остатки', blank=True,
                                            editable=False)
+    buffer = models.ManyToManyField(LeftOverDetailedData, related_name='buffer_leftovers', verbose_name='Прошлые остатки', blank=True,
+                                      editable=False)
     total = models.PositiveIntegerField('Всего товара', default=0)
+    buffer_total = models.PositiveIntegerField('Было в начале дня', default=0)
+    last_update = models.DateTimeField(auto_now=False, auto_now_add=False, blank=True, null=True)
 
     def save(self, *args, **kwargs):
         return super().save(*args, **kwargs)
