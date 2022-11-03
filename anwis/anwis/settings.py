@@ -52,6 +52,7 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DATETIME_FORMAT': '%H:%M %d/%m/%Y',
+    'DATE_FORMAT': '%d/%m/%Y',
     "DATE_INPUT_FORMATS": ["%d/%m/%Y"],
     'COERCE_DECIMAL_TO_STRING': False,
 }
