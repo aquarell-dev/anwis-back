@@ -1,10 +1,7 @@
 from rest_framework import serializers
 
 from .models import LeftOver, LeftOverDetailedData
-from .services import LeftOverService
-
-
-_leftover_service = LeftOverService()
+from .services import get_leftover
 
 
 class LeftOverDetailSerializer(serializers.ModelSerializer):
@@ -15,11 +12,12 @@ class LeftOverDetailSerializer(serializers.ModelSerializer):
 
 class LeftOverSerializer(serializers.ModelSerializer):
     products = LeftOverDetailSerializer(many=True, read_only=True)
+    buffer = LeftOverDetailSerializer(many=True, read_only=True)
 
     def create(self, validated_data):
         nm = validated_data['url'].split('catalog/')[1].split('/detail')[0].strip()
 
-        leftover_data = _leftover_service.get_leftover(nm)
+        leftover_data = get_leftover(nm)
 
         leftover = LeftOver.objects.create(
             **validated_data,

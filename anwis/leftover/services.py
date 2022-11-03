@@ -1,4 +1,6 @@
+from datetime import timezone, datetime
 from typing import List
+import pytz
 
 import requests
 
@@ -13,62 +15,91 @@ _headers = {
 }
 
 
-class LeftOverService:
-    def _fetch_leftovers(self, nms: list):
-        nm_string = ';'.join(nms)
-        response = requests.get(
-            f'https://card.wb.ru/cards/basket?spp=27&regions=80,68,64,83,4,38,33,70,82,69,86,30,40,48,1,22,66,'
-            f'31&pricemarginCoeff=1.0&reg=1&appType=1&emp=0&locale=ru&lang=ru&curr=rub&couponsGeo=12,7,3,6,18,'
-            f'21&sppFixGeo=4&dest=-1029256,-72181,-1144811,12358288&nm={nm_string}',
-            headers=_headers
-        )
+def _fetch_leftovers(nms: list):
+    nm_string = ';'.join(nms)
+    response = requests.get(
+        f'https://card.wb.ru/cards/basket?spp=27&regions=80,68,64,83,4,38,33,70,82,69,86,30,40,48,1,22,66,'
+        f'31&pricemarginCoeff=1.0&reg=1&appType=1&emp=0&locale=ru&lang=ru&curr=rub&couponsGeo=12,7,3,6,18,'
+        f'21&sppFixGeo=4&dest=-1029256,-72181,-1144811,12358288&nm={nm_string}',
+        headers=_headers
+    )
 
-        return response.json()
+    return response.json()
 
-    def _parse_leftover_specs(self, leftover: dict) -> List[TLeftOverSpecification]:
-        leftover_specs = []
 
-        for size in leftover['sizes']:
-            total = 0
+def _parse_leftover_specs(leftover: dict) -> List[TLeftOverSpecification]:
+    leftover_specs = []
 
-            for stock in size['stocks']:
-                total += stock['qty']
+    for size in leftover['sizes']:
+        total = 0
 
-            leftover_specs.append(TLeftOverSpecification(title=size['origName'], quantity=total))
+        for stock in size['stocks']:
+            total += stock['qty']
 
-        return leftover_specs
+        leftover_specs.append(TLeftOverSpecification(title=size['origName'], quantity=total))
 
-    def get_leftover(self, nm: str) -> TLeftOver:
-        response = self._fetch_leftovers([nm])
+    return leftover_specs
 
-        leftover = response['data']['products'][0]
 
-        leftover_specs = self._parse_leftover_specs(leftover)
+def get_leftover(nm: str) -> TLeftOver:
+    response = _fetch_leftovers([nm])
 
-        return TLeftOver(
-            title=leftover['name'],
-            leftovers=leftover_specs
-        )
+    leftover = response['data']['products'][0]
 
-    def update_leftovers(self, nms: list):
-        response = self._fetch_leftovers(nms)
+    leftover_specs = _parse_leftover_specs(leftover)
 
-        products = response['data']['products']
+    return TLeftOver(
+        title=leftover['name'],
+        leftovers=leftover_specs
+    )
 
-        for leftover in LeftOver.objects.all():
 
-            total = 0
+def update_leftovers(nms: list = None, buffer_update: bool = True):
+    """
+    If update_buffer set to True then it would update only buffer leftovers,
+    otherwise it would update the current leftovers.
+    If you don't specify nms explicitly => it'd take all the nms of all leftovers.
 
-            for product in products:
-                if leftover.nm == str(product['id']):
+    :param nms:
+    :param buffer_update:
+    :return:
+    """
+    if not nms:
+        nms = [leftover.nm for leftover in LeftOver.objects.all()]
+
+    if buffer_update:
+        print('update buffer')
+
+    response = _fetch_leftovers(nms)
+
+    products = response['data']['products']
+
+    for leftover in LeftOver.objects.all():
+
+        total = 0
+
+        for product in products:
+            if leftover.nm == str(product['id']):
+                if buffer_update:
+                    leftover.buffer.all().delete()
+                elif not buffer_update:
                     leftover.products.all().delete()
 
-                    detailed = self._parse_leftover_specs(product)
+                detailed = _parse_leftover_specs(product)
 
-                    for detail in detailed:
-                        total += detail.quantity
+                for detail in detailed:
+                    total += detail.quantity
+                    if buffer_update:
+                        leftover.buffer.create(title=detail.title, quantity=detail.quantity)
+                    elif not buffer_update:
                         leftover.products.create(title=detail.title, quantity=detail.quantity)
 
+        if buffer_update:
+            leftover.buffer_total = total
+        elif not buffer_update:
             leftover.total = total
 
-            leftover.save()
+        if buffer_update:
+            leftover.last_update = datetime.now(tz=pytz.timezone("Europe/Moscow"))
+
+        leftover.save()
