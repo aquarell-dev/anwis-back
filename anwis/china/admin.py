@@ -55,17 +55,15 @@ class IndividualEntrepreneurAdmin(admin.ModelAdmin):
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = [field.name for field in Order._meta.get_fields() if field.name not in ['products', 'tasks']]
+    list_display = ['id', 'china_distributor', 'total_quantity', 'cargo_number', 'date', 'delivered', 'draft']
     list_display_links = ['id']
     search_fields = ['id']
-    list_filter = ['draft']
+    list_filter = ['draft', 'delivered']
 
 
 @admin.register(Product)
 class ProductAdmin(ImagePreviewMixin, admin.ModelAdmin):
-    list_display = [field.name for field in Product._meta.get_fields() if field.name not in ['order', 'productquantity']] + [
-        'preview_image'
-    ]
+    list_display = ['id', 'title', 'article', 'preview_image', 'color', 'size', 'brand', 'category']
     list_display_links = ['id']
 
 

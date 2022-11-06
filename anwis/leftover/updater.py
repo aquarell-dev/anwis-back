@@ -8,6 +8,6 @@ from .services import update_leftovers
 
 def start():
     scheduler = BackgroundScheduler()
-    trigger = OrTrigger([CronTrigger(hour=2, minute=10)])
+    trigger = OrTrigger([CronTrigger(hour=20, minute=35)])
     scheduler.add_job(update_leftovers, trigger)
     scheduler.start()

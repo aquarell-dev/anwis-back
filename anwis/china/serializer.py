@@ -29,9 +29,15 @@ class IndividualEntrepreneurSerializer(serializers.ModelSerializer):
         model = IndividualEntrepreneur
 
 
-class ProductSerializer(serializers.ModelSerializer):
+class ProductListRetrieveSerializer(serializers.ModelSerializer):
     category = serializers.SlugRelatedField(slug_field='category', read_only=True)
 
+    class Meta:
+        fields = '__all__'
+        model = Product
+
+
+class ProductCreateSerializer(serializers.ModelSerializer):
     class Meta:
         fields = '__all__'
         model = Product
@@ -44,7 +50,7 @@ class ProductQuantitySerializer(serializers.ModelSerializer):
 
 
 class ProductQuantityDetailedSerializer(ProductQuantitySerializer):
-    product = ProductSerializer()
+    product = ProductListRetrieveSerializer()
 
     class Meta(ProductQuantitySerializer.Meta):
         pass
