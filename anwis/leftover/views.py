@@ -21,3 +21,12 @@ class FetchLeftOversView(APIView):
         except Exception as e:
             return Response({"message": e}, status=400)
         return Response({"message": "success"}, status=200)
+
+
+class ResetCacheView(APIView):
+    def put(self, request: Request):
+        try:
+            update_leftovers(buffer_update=True)
+        except Exception as e:
+            return Response({"message": e}, status=400)
+        return Response({"message": "success"}, status=200)
