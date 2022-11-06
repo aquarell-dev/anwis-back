@@ -1,6 +1,7 @@
 from django.contrib import admin
 
 from documents.models import Photo, Document
+from utils.mixins import ImagePreviewMixin
 
 
 @admin.register(Document)
@@ -10,6 +11,6 @@ class DocumentAdmin(admin.ModelAdmin):
 
 
 @admin.register(Photo)
-class PhotoAdmin(admin.ModelAdmin):
-    list_display = ['id', 'title']
+class PhotoAdmin(ImagePreviewMixin, admin.ModelAdmin):
+    list_display = ['id', 'title', 'preview_image']
     list_display_links = ['id']

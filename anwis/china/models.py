@@ -1,5 +1,7 @@
 from django.db import models
 
+from documents.models import Photo
+
 
 class IndividualEntrepreneur(models.Model):
     individual_entrepreneur = models.CharField('ИП', max_length=80, unique=True)
@@ -62,7 +64,7 @@ class Category(models.Model):
 class Product(models.Model):
     title = models.CharField('Название товара', max_length=100)
     article = models.CharField('Артикул поставщика', max_length=100)
-    photo = models.ImageField('Картинка', upload_to='images/', blank=True, null=True)
+    photo = models.ForeignKey(Photo, verbose_name='Картинка', blank=True, null=True, on_delete=models.SET_NULL)
     color = models.CharField('Цвет', max_length=100)
     size = models.CharField('Размер', max_length=100, blank=True, null=True)
     brand = models.CharField('Брэнд', max_length=100)

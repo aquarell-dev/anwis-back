@@ -31,6 +31,13 @@ class IndividualEntrepreneurSerializer(serializers.ModelSerializer):
 
 class ProductListRetrieveSerializer(serializers.ModelSerializer):
     category = serializers.SlugRelatedField(slug_field='category', read_only=True)
+    photo = serializers.SerializerMethodField()
+
+    def get_photo(self, obj):
+        request = self.context.get('request')
+
+        if (obj.photo):
+            return request.build_absolute_uri(obj.photo.photo.url)
 
     class Meta:
         fields = '__all__'

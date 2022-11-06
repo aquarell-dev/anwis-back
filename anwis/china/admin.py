@@ -63,8 +63,16 @@ class OrderAdmin(admin.ModelAdmin):
 
 @admin.register(Product)
 class ProductAdmin(ImagePreviewMixin, admin.ModelAdmin):
-    list_display = ['id', 'title', 'article', 'preview_image', 'color', 'size', 'brand', 'category']
+    list_display = ['id', 'title', 'preview_image', 'article', 'color', 'size', 'brand', 'category']
     list_display_links = ['id']
+
+    def preview_image(self, obj):
+        if obj and obj.photo:
+            return mark_safe(f'<img src="{obj.photo.photo.url}" width=50>')
+        else:
+            return mark_safe(f'<p>No photo</p>')
+
+    preview_image.short_description = 'Картинка'
 
 
 @admin.register(ProductQuantity)

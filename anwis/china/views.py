@@ -17,7 +17,6 @@ china_service = ChinaService()
 
 class ProductListCreateView(generics.ListCreateAPIView):
     queryset = Product.objects.all()
-    parser_classes = [MultiPartParser]
 
     def get_serializer_class(self):
         if self.request.method == 'POST':
