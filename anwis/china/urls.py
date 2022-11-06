@@ -2,7 +2,7 @@ from django.urls import path
 
 from .views import OrderListCreateView, ChinaDistributorView, OrderForProjectView, StatusView, \
     IndividualEntrepreneurView, ProductListCreateView, CategoryListCreateView, OrderRetrieveView, OrderUpdateView, \
-    TaskListCreateView, OrderPartialUpdateView
+    TaskListCreateView, OrderPartialUpdateView, UpdateProductPhotoView, FormExcelView
 
 urlpatterns = [
     path('orders/', OrderListCreateView.as_view()),
@@ -14,6 +14,8 @@ urlpatterns = [
     path('statuses/', StatusView.as_view()),
     path('individual-entrepreneurs/', IndividualEntrepreneurView.as_view()),
     path('products/', ProductListCreateView.as_view()),
+    path('products/update/', UpdateProductPhotoView.as_view()),
+    path('form-excel/', FormExcelView.as_view()),
     path('categories/', CategoryListCreateView.as_view()),
     path('tasks/', TaskListCreateView.as_view()),
 ]

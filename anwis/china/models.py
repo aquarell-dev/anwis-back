@@ -60,10 +60,14 @@ class Category(models.Model):
 
 
 class Product(models.Model):
-    title = models.CharField('Название товара', max_length=100, unique=True)
-    article = models.PositiveBigIntegerField('Артикул')
-    photo = models.ImageField('Картинка', upload_to='images/')
-    category = models.ForeignKey(Category, verbose_name='Категория', on_delete=models.CASCADE, default=1, blank=True,
+    title = models.CharField('Название товара', max_length=100)
+    article = models.CharField('Артикул поставщика', max_length=100)
+    photo = models.ImageField('Картинка', upload_to='images/', blank=True, null=True)
+    color = models.CharField('Цвет', max_length=100)
+    size = models.CharField('Размер', max_length=100, blank=True, null=True)
+    brand = models.CharField('Брэнд', max_length=100)
+    url = models.URLField('Ссылка на товар', blank=True, null=True)
+    category = models.ForeignKey(Category, verbose_name='Категория', on_delete=models.CASCADE, blank=True,
                                  null=True)
 
     def __str__(self):
@@ -131,7 +135,9 @@ class Order(models.Model):
     price_per_kg = models.DecimalField('Цена за кг, $', decimal_places=2, max_digits=12, default=0)
     package_price = models.DecimalField('Цена упаковки, $', decimal_places=2, max_digits=12, default=0)
     total_delivery = models.DecimalField('Цена за доствку, $', decimal_places=2, max_digits=12, default=0)
+    packages = models.PositiveIntegerField('Кол-во грузовых мест', default=0)
     delivered = models.BooleanField('Доставлен', default=False)
+    excel = models.FileField('Эксель', upload_to='documents/auto/', blank=True, null=True)
 
     products = models.ManyToManyField(ProductQuantity, verbose_name='Товары')
 
