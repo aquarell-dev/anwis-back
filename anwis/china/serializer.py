@@ -82,9 +82,22 @@ class OrderListRetrieveSerializer(serializers.ModelSerializer):
     status = StatusSerializer()
     products = ProductQuantityDetailedSerializer(many=True)
     tasks = TaskSerializer(many=True)
+    documents = serializers.SerializerMethodField()
+
+    def get_documents(self, obj: Order):
+        request = self.context.get('request')
+
+        if obj.documents:
+            return [
+                {
+                    "id": document.id,
+                    "name": document.document.name,
+                    "url": request.build_absolute_uri(document.document.url),
+                } for document in obj.documents.all()
+            ]
 
     class Meta:
-        fields = '__all__'
+        fields = [field.name for field in Order._meta.get_fields()]
         model = Order
 
 

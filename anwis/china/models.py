@@ -1,6 +1,6 @@
 from django.db import models
 
-from documents.models import Photo
+from documents.models import Photo, Document
 
 
 class IndividualEntrepreneur(models.Model):
@@ -140,6 +140,7 @@ class Order(models.Model):
     packages = models.PositiveIntegerField('Кол-во грузовых мест', default=0)
     delivered = models.BooleanField('Доставлен', default=False)
     excel = models.FileField('Эксель', upload_to='documents/auto/', blank=True, null=True)
+    documents = models.ManyToManyField(Document, verbose_name='Картинки', blank=True)
 
     products = models.ManyToManyField(ProductQuantity, verbose_name='Товары')
 
