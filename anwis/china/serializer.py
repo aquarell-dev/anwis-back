@@ -91,8 +91,8 @@ class OrderListRetrieveSerializer(serializers.ModelSerializer):
             return [
                 {
                     "id": document.id,
-                    "name": document.document.name,
-                    "url": request.build_absolute_uri(document.document.url),
+                    "title": document.document.name,
+                    "path": request.build_absolute_uri(document.document.url),
                 } for document in obj.documents.all()
             ]
 
