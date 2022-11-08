@@ -123,10 +123,12 @@ class Order(models.Model):
     date = models.DateTimeField('Дата и время', auto_now_add=True)
     custom_id = models.CharField('Кастомное айди', editable=False, max_length=10)
     tasks = models.ManyToManyField(Task, verbose_name='Задачи', blank=True)
-    total_cny = models.DecimalField('Сумма в юанях', decimal_places=2, max_digits=12, default=0)
-    total_rub = models.DecimalField('Сумма в юанях', decimal_places=2, max_digits=12, default=0)
-    course = models.DecimalField('Курс', decimal_places=2, max_digits=12, default=0)
-    total_expenses = models.DecimalField('Доп. расходы в рублях', decimal_places=2, max_digits=12, default=0)
+    total_cny = models.FloatField('Сумма в юанях', default=0)
+    total_rub = models.FloatField('Сумма в рублях', default=0)
+    course = models.FloatField('Курс', default=0)
+    expenses_cny = models.FloatField('Затраты, юаней', default=0)
+    expenses_rub = models.FloatField('Затраты, рублей', default=0)
+    total_expenses = models.FloatField('Доп. расходы в рублях', default=0)
     total_quantity = models.PositiveIntegerField('Кол-во товаров', default=0)
     ready_date = models.DateField('Время изготовления', null=True, blank=True)
     shipping_from_china_date = models.DateField('Дата отправки из китая', null=True, blank=True)
@@ -134,9 +136,9 @@ class Order(models.Model):
     cargo_number = models.CharField('Номер Доставки', null=True, blank=True, max_length=256)
     cargo_weight = models.CharField('Вес карго', null=True, blank=True, max_length=256)
     cargo_volume = models.CharField('Объем карго', null=True, blank=True, max_length=256)
-    price_per_kg = models.DecimalField('Цена за кг, $', decimal_places=2, max_digits=12, default=0)
-    package_price = models.DecimalField('Цена упаковки, $', decimal_places=2, max_digits=12, default=0)
-    total_delivery = models.DecimalField('Цена за доствку, $', decimal_places=2, max_digits=12, default=0)
+    price_per_kg = models.FloatField('Цена за кг, $', default=0)
+    package_price = models.FloatField('Цена упаковки, $', default=0)
+    total_delivery = models.FloatField('Цена за доствку, $', default=0)
     packages = models.PositiveIntegerField('Кол-во грузовых мест', default=0)
     delivered = models.BooleanField('Доставлен', default=False)
     excel = models.FileField('Эксель', upload_to='documents/auto/', blank=True, null=True)
@@ -154,5 +156,3 @@ class Order(models.Model):
     class Meta:
         verbose_name = 'Заказ'
         verbose_name_plural = 'Заказы'
-
-
