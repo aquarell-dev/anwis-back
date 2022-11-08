@@ -88,7 +88,17 @@ class ChinaDistributorView(generics.ListCreateAPIView):
     serializer_class = ChinaSerializer
 
 
+class ChinaDistributorRetrieveDestroyUpdateView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = ChinaDistributor.objects.all()
+    serializer_class = ChinaSerializer
+
+
 class OrderForProjectView(generics.ListCreateAPIView):
+    queryset = OrderForProject.objects.all()
+    serializer_class = OrderForProjectSerializer
+
+
+class OrderForProjectRetrieveDestroyUpdateView(generics.RetrieveUpdateDestroyAPIView):
     queryset = OrderForProject.objects.all()
     serializer_class = OrderForProjectSerializer
 
