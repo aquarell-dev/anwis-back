@@ -1,4 +1,5 @@
 import io
+from typing import List, Tuple
 from urllib.request import urlopen
 
 import requests
@@ -13,12 +14,46 @@ from django.core.files import File
 from rest_framework.generics import get_object_or_404
 from rest_framework.request import Request
 
-from china.models import Order
+from china.models import Order, Product, ProductQuantity
 
 uppercase = string.ascii_uppercase
 
 
 class ChinaService:
+    def _get_scales(self, orig_w: int, orig_h: int, n: int, y_offset: int) -> Tuple[float, float]:
+        """
+        Get the scales and maintain the aspect ratio.
+
+        How the alg works:
+            1. We calculate the so-called des_h(desired height) which is essentially just (cell height x n - 2y_offset)
+            2. Then we get the k, which is just des_h divided by original height.
+            3. We gotta get the new width value and simple proportion suits us.
+            4. Then we just like calc the x_k just like we did with the y_k
+            5. Returns you tuple of x_scale, y_scale
+
+        :param orig_w - original width of the image:
+        :param orig_h - original height of the image:
+        :param n - height of a cell:
+        :param y_offset - offset by y axis:
+        :return tuple of x_scale, y_scale:
+        """
+        des_h = self._cell_height * n - y_offset * 2
+        new_w = des_h * orig_w / orig_h
+
+        return new_w, des_h
+
+    def _get_resized_image_data(self, im: Image, bound_width_height):
+        # get the image and resize it
+        im.thumbnail(bound_width_height, Image.ANTIALIAS)  # ANTIALIAS is important if shrinking
+
+        # stuff the image data into a bytestream that excel can read
+        im_bytes = io.BytesIO()
+        im.save(im_bytes, format='PNG')
+        return im_bytes
+
+    _cell_width = 565
+    _cell_height = 100
+
     def form_excel(self, id: int, request: Request):
         name = f'order{id}.xlsx'
 
@@ -68,7 +103,8 @@ class ChinaService:
 
         articles = [product.product.article for product in order.products.all()]
 
-        products = [order.products.filter(product__article=article) for article in list(set(articles))]
+        products: List[List[ProductQuantity]] = [order.products.filter(product__article=article)
+                                                 for article in list(set(articles))]
 
         last = len(order.products.all()) + 2
 
@@ -81,34 +117,32 @@ class ChinaService:
 
         index = 0
 
-        for product_array in products:
-            if product_array[0].product.photo:
-                url = request.build_absolute_uri(product_array[0].product.photo.url)
-                image_data = io.BytesIO(urlopen(url).read())
+        for product_qty_list in products:
+            if product_qty_list[0].product.photo:
+                url = request.build_absolute_uri(product_qty_list[0].product.photo.photo.url)
 
                 response = requests.get(url)
                 img = Image.open(io.BytesIO(response.content))
-                w, h = img.size
 
-                cell_width = 565
-                cell_height = 100
+                w, h = self._get_scales(
+                    *img.size, len(product_qty_list), 1
+                )
 
-                x_scale = cell_width / len(product_array) / w
-                y_scale = cell_height * len(product_array) / h
+                image_data = self._get_resized_image_data(img, (w, h))
 
                 worksheet.insert_image(
                     f'A{index + 3}',
                     url,
-                    {'image_data': image_data, 'x_scale': 0.7, 'y_scale': 0.7}
+                    {'image_data': image_data}
                 )
 
             start = index + 3
 
-            for product in product_array:
+            for product_qty in product_qty_list:
                 index += 1
                 worksheet.write(
                     f'B{index + 2}',
-                    str(product.quantity),
+                    str(product_qty.quantity),
                     workbook.add_format({
                         **centered_and_border,
                         'font_size': 18,
@@ -116,7 +150,7 @@ class ChinaService:
                 )
                 worksheet.write(
                     f'C{index + 2}',
-                    str(product.product.size),
+                    str(product_qty.product.size),
                     workbook.add_format({
                         **centered_and_border,
                         'font_size': 18,
