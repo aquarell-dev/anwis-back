@@ -8,7 +8,7 @@ SECRET_KEY = 'django-insecure-9jac1sp!=he74jeb68%%@3!do=sp1d7)u3(3!_#9fav9=d^#9u
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']  # DEBUG only
+ALLOWED_HOSTS = ['*', 'anwis-sklad.herokuapp.com']  # DEBUG only
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -28,10 +28,11 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.common.CommonMiddleware",
     'django.middleware.security.SecurityMiddleware',
     "whitenoise.middleware.WhiteNoiseMiddleware",
     'django.contrib.sessions.middleware.SessionMiddleware',
-    "corsheaders.middleware.CorsMiddleware",
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
