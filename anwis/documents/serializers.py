@@ -10,12 +10,12 @@ class DocumentSerializer(serializers.ModelSerializer):
 
 
 class PhotoSerializer(serializers.ModelSerializer):
-    abs_url = serializers.SerializerMethodField()
-
-    def get_abs_url(self, obj: Photo):
-        req = self.context.get('request')
-        return req.build_absolute_uri(obj.photo.url)
+    # abs_url = serializers.SerializerMethodField()
+    #
+    # def get_abs_url(self, obj: Photo):
+    #     req = self.context.get('request')
+    #     return req.build_absolute_uri(obj.photo.url)
 
     class Meta:
-        fields = ('id', 'title', 'photo', 'abs_url')
+        fields = ('id', 'title', 'photo')
         model = Photo
