@@ -14,7 +14,7 @@ class PhotoSerializer(serializers.ModelSerializer):
 
     def get_abs_url(self, obj: Photo):
         req = self.context.get('request')
-        return obj.photo.url
+        return req.build_absolute_uri(obj.photo.url)
 
     class Meta:
         fields = ('id', 'title', 'photo', 'abs_url')
