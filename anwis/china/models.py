@@ -113,9 +113,9 @@ class Order(models.Model):
                                                 verbose_name='Индивидуальный предприниматель',
                                                 on_delete=models.CASCADE)
     china_distributor = models.ForeignKey(ChinaDistributor, verbose_name='Китайский посредник',
-                                          on_delete=models.CASCADE)
+                                          on_delete=models.PROTECT)
     order_for_project = models.ForeignKey(OrderForProject, verbose_name='Заказ под проект',
-                                          on_delete=models.CASCADE)
+                                          on_delete=models.PROTECT)
     status = models.ForeignKey(Status, verbose_name='Статус',
                                on_delete=models.CASCADE)
     draft = models.BooleanField('Черновик', default=False)
