@@ -4,7 +4,6 @@ from urllib.request import urlopen
 import requests
 import xlsxwriter
 import string
-from itertools import groupby
 
 from PIL import Image
 from django.conf import settings
