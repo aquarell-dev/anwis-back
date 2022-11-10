@@ -103,6 +103,7 @@ class OrderListRetrieveSerializer(serializers.ModelSerializer):
 
 class OrderCreateUpdateSerializer(WritableNestedModelSerializer, serializers.ModelSerializer):
     products = ProductQuantitySerializer(many=True)
+    tasks = TaskSerializer(many=True)
 
     class Meta:
         fields = '__all__'
