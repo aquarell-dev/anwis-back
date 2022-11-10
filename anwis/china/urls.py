@@ -11,7 +11,7 @@ from .views import (
 
     IndividualEntrepreneurView,
 
-    ProductListCreateView,
+    ProductListCreateView, ProductUpdateView,
 
     CategoryListCreateView, CategoryRetrieveUpdateDestroyView,
 
@@ -37,6 +37,7 @@ urlpatterns = [
     path('individual-entrepreneurs/', IndividualEntrepreneurView.as_view()),
 
     path('products/', ProductListCreateView.as_view()),
+    path('products/<int:pk>/', ProductUpdateView.as_view()),
 
     path('form-excel/', FormExcelView.as_view()),
 

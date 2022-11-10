@@ -24,6 +24,14 @@ class ProductListCreateView(generics.ListCreateAPIView):
         return ProductListRetrieveSerializer
 
 
+class ProductUpdateView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProductListRetrieveSerializer
+
+    def put(self, request, *args, **kwargs):
+        return self.partial_update(request, *args, **kwargs)
+
+
 class FormExcelView(views.APIView):
     def put(self, request: Request):
         if not request.data['id']:
