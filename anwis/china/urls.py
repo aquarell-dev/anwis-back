@@ -1,9 +1,24 @@
 from django.urls import path
 
-from .views import OrderListCreateView, ChinaDistributorView, OrderForProjectView, StatusView, \
-    IndividualEntrepreneurView, ProductListCreateView, CategoryListCreateView, OrderRetrieveView, OrderUpdateView, \
-    TaskListCreateView, OrderPartialUpdateView, UpdateProductPhotoView, FormExcelView, \
-    OrderForProjectRetrieveDestroyUpdateView, ChinaDistributorRetrieveDestroyUpdateView
+from .views import (
+    OrderListCreateView, OrderRetrieveView, OrderUpdateView, OrderPartialUpdateView,
+
+    ChinaDistributorView, ChinaDistributorRetrieveDestroyUpdateView,
+
+    OrderForProjectRetrieveDestroyUpdateView, OrderForProjectView,
+
+    StatusView,
+
+    IndividualEntrepreneurView,
+
+    ProductListCreateView,
+
+    CategoryListCreateView, CategoryRetrieveUpdateDestroyView,
+
+    TaskListCreateView,
+
+    FormExcelView,
+)
 
 urlpatterns = [
     path('orders/', OrderListCreateView.as_view()),
@@ -22,11 +37,11 @@ urlpatterns = [
     path('individual-entrepreneurs/', IndividualEntrepreneurView.as_view()),
 
     path('products/', ProductListCreateView.as_view()),
-    path('products/update/', UpdateProductPhotoView.as_view()),
 
     path('form-excel/', FormExcelView.as_view()),
 
     path('categories/', CategoryListCreateView.as_view()),
+    path('categories/<int:pk>/', CategoryRetrieveUpdateDestroyView.as_view()),
 
     path('tasks/', TaskListCreateView.as_view()),
 ]
