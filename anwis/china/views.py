@@ -24,21 +24,6 @@ class ProductListCreateView(generics.ListCreateAPIView):
         return ProductListRetrieveSerializer
 
 
-class UpdateProductPhotoView(views.APIView):
-    parser_classes = [MultiPartParser, FormParser]
-
-    def post(self, request, format=None):
-        data = request.data
-        if isinstance(data, list):
-            serializer = ProductListRetrieveSerializer(data=request.data, many=True)
-        else:
-            serializer = ProductListRetrieveSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
 class FormExcelView(views.APIView):
     def put(self, request: Request):
         if not request.data['id']:
@@ -52,7 +37,18 @@ class FormExcelView(views.APIView):
 
 
 class OrderListCreateView(generics.ListCreateAPIView):
-    queryset = Order.objects.all()
+    def get_queryset(self):
+        queryset = Order.objects.all().order_by('-id')
+
+        archive = self.request.query_params.get('archive')
+
+        if archive is not None:
+            try:
+                queryset = Order.objects.filter(archive=bool(int(archive))).order_by('-id')
+            except TypeError:
+                pass
+
+        return queryset
 
     def get_serializer_class(self):
         if self.request.method == 'POST':
@@ -60,7 +56,7 @@ class OrderListCreateView(generics.ListCreateAPIView):
         return OrderListRetrieveSerializer
 
 
-class OrderRetrieveView(generics.RetrieveAPIView):
+class OrderRetrieveView(generics.RetrieveDestroyAPIView):
     queryset = Order.objects.all()
     serializer_class = OrderListRetrieveSerializer
 
@@ -79,7 +75,7 @@ class OrderUpdateView(generics.UpdateAPIView):
 
 
 class StatusView(generics.ListCreateAPIView):
-    queryset = Status.objects.all()
+    queryset = Status.objects.all().order_by('id')
     serializer_class = StatusSerializer
 
 
@@ -109,6 +105,11 @@ class IndividualEntrepreneurView(generics.ListCreateAPIView):
 
 
 class CategoryListCreateView(generics.ListCreateAPIView):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+
+
+class CategoryRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
 
