@@ -131,8 +131,10 @@ class Order(models.Model):
     total_expenses = models.FloatField('Доп. расходы в рублях', default=0)
     total_quantity = models.PositiveIntegerField('Кол-во товаров', default=0)
     ready_date = models.DateField('Время изготовления', null=True, blank=True)
+    ready = models.BooleanField('Товар Изготовлен', default=False)
     shipping_from_china_date = models.DateField('Дата отправки из китая', null=True, blank=True)
-    in_moscow_date = models.DateField('Дата приезда в Москву', null=True, blank=True)
+    in_moscow_date = models.DateField('Примерная Дата приезда в Москву', null=True, blank=True)
+    real_in_moscow_date = models.DateField('Реальная Дата приезда в Москву', null=True, blank=True)
     cargo_number = models.CharField('Номер Доставки', null=True, blank=True, max_length=256)
     cargo_weight = models.CharField('Вес карго', null=True, blank=True, max_length=256)
     cargo_volume = models.CharField('Объем карго', null=True, blank=True, max_length=256)
@@ -143,6 +145,7 @@ class Order(models.Model):
     delivered = models.BooleanField('Доставлен', default=False)
     excel = models.FileField('Эксель', upload_to='documents/auto/', blank=True, null=True)
     documents = models.ManyToManyField(Document, verbose_name='Картинки', blank=True)
+    archive = models.BooleanField('Архив', default=False)
 
     products = models.ManyToManyField(ProductQuantity, verbose_name='Товары')
 
