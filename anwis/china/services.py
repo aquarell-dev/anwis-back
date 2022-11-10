@@ -21,6 +21,11 @@ uppercase = string.ascii_uppercase
 
 
 class ChinaService:
+    def __init__(self):
+        self._last_cell = 0
+        self._current_quantity = 0
+        self._current_size = ''
+
     def _get_scales(self, orig_w: int, orig_h: int, n: int, y_offset: int) -> Tuple[int, int]:
         """
         Get the scales and maintain the aspect ratio.
@@ -53,7 +58,9 @@ class ChinaService:
         return im_bytes
 
     _cell_width = 565
-    _cell_height = 100
+    _cell_height = 85
+
+    _default_size = 5
 
     def form_excel(self, id: int, request: Request):
         name = f'order{id}.xlsx'
@@ -107,19 +114,73 @@ class ChinaService:
         products: List[List[ProductQuantity]] = [order.products.filter(product__article=article)
                                                  for article in list(set(articles))]
 
-        last = len(order.products.all()) + 2
-
-        worksheet.write(f'A{last+1}', 'за доставку', delivery_n_total_format)
-        worksheet.write(f'A{last+2}', 'TOTAL', delivery_n_total_format)
-        worksheet.write(f'B{last+2}', str(order.total_quantity), delivery_n_total_format)
-
-        for i in range(2, last+2):
-            worksheet.set_row(i, 75)
-
         start = 3
 
         for product_qty_list in products:
-            merge_cells_count = len(product_qty_list) if len(product_qty_list) >= 5 else 5
+            merge_cells_count = len(product_qty_list) if len(
+                product_qty_list) >= self._default_size else self._default_size
+
+            for i in range(start - 1, start + merge_cells_count - 1):
+                worksheet.set_row(i, 65)
+
+            worksheet.merge_range(f'A{start}:A{start + merge_cells_count - 1}', '', merge_title_format)
+
+            cells_left_unfilled = self._default_size - len(product_qty_list)
+
+            for idx, product_qty in enumerate(product_qty_list):
+                worksheet.write(
+                    f'B{start + idx}',
+                    str(product_qty.quantity),
+                    workbook.add_format({
+                        **centered_and_border,
+                        'font_size': 18,
+                    })
+                )
+
+                worksheet.write(
+                    f'C{start + idx}',
+                    str(product_qty.product.size),
+                    workbook.add_format({
+                        **centered_and_border,
+                        'font_size': 18,
+                    })
+                )
+
+                self._current_quantity = str(product_qty.quantity)
+                self._current_size = str(product_qty.product.size)
+                self._last_cell = start + idx
+
+            if cells_left_unfilled == 4:
+                worksheet.merge_range(
+                    f'B{self._last_cell}:B{self._last_cell + 4}',
+                    str(self._current_quantity),
+                    merge_title_format
+                )
+                worksheet.merge_range(
+                    f'C{self._last_cell}:C{self._last_cell + 4}',
+                    str(self._current_size),
+                    merge_title_format
+                )
+            elif cells_left_unfilled == 1:
+                worksheet.write(
+                    f'B{self._last_cell + 1}',
+                    '',
+                    workbook.add_format({
+                        **centered_and_border,
+                        'font_size': 18,
+                    })
+                )
+                worksheet.write(
+                    f'C{self._last_cell + 1}',
+                    '',
+                    workbook.add_format({
+                        **centered_and_border,
+                        'font_size': 18,
+                    })
+                )
+            elif cells_left_unfilled > 1:
+                print(f'merging B{self._last_cell + 1}:C{self._last_cell + cells_left_unfilled}')
+                worksheet.merge_range(f'B{self._last_cell + 1}:C{self._last_cell + cells_left_unfilled}', '', merge_title_format)
 
             if product_qty_list[0].product.photo:
                 url = request.build_absolute_uri(product_qty_list[0].product.photo.photo.url)
@@ -139,26 +200,20 @@ class ChinaService:
                     {'image_data': image_data, 'y_offset': 12}
                 )
 
-            # for product_qty in product_qty_list:
-            #     index += 1
-            #     worksheet.write(
-            #         f'B{index + 2}',
-            #         str(product_qty.quantity),
-            #         workbook.add_format({
-            #             **centered_and_border,
-            #             'font_size': 18,
-            #         })
-            #     )
-            #     worksheet.write(
-            #         f'C{index + 2}',
-            #         str(product_qty.product.size),
-            #         workbook.add_format({
-            #             **centered_and_border,
-            #             'font_size': 18,
-            #         })
-            #     )
-            #
-            # worksheet.merge_range(f'A{start}:A{index+2}', '', merge_title_format)
+            start += merge_cells_count
+
+        worksheet.set_row(start - 1, 65)
+        worksheet.set_row(start, 65)
+        worksheet.write(f'A{start}', 'за доставку', delivery_n_total_format)
+        worksheet.write(f'B{start}', '', delivery_n_total_format)
+        worksheet.write(f'A{start + 1}', 'TOTAL', delivery_n_total_format)
+        worksheet.write(f'B{start + 1}', str(order.total_quantity), delivery_n_total_format)
+        worksheet.write(f'C{start}', '', delivery_n_total_format)
+        worksheet.write(f'C{start + 1}', '', delivery_n_total_format)
+
+        for col in ['D', 'E']:
+            for x in range(3, start + 2):
+                worksheet.write(f'{col}{x}', '', merge_title_format)
 
         workbook.close()
 
