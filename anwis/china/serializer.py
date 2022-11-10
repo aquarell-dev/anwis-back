@@ -32,15 +32,20 @@ class IndividualEntrepreneurSerializer(serializers.ModelSerializer):
 class ProductListRetrieveSerializer(serializers.ModelSerializer):
     category = serializers.SlugRelatedField(slug_field='category', read_only=True)
     photo = serializers.SerializerMethodField()
+    photo_id = serializers.SerializerMethodField(read_only=True)
 
     def get_photo(self, obj):
         request = self.context.get('request')
 
-        if (obj.photo):
+        if obj.photo:
             return request.build_absolute_uri(obj.photo.photo.url)
 
+    def get_photo_id(self, obj: Product):
+        if obj.photo:
+            return obj.photo.id
+
     class Meta:
-        fields = '__all__'
+        fields = [field.name for field in Product._meta.get_fields() if field.name not in ['productquantity']] + ['photo_id']
         model = Product
 
 
@@ -101,7 +106,15 @@ class OrderListRetrieveSerializer(serializers.ModelSerializer):
         model = Order
 
 
-class OrderCreateUpdateSerializer(WritableNestedModelSerializer, serializers.ModelSerializer):
+class OrderCreateSerializer(WritableNestedModelSerializer, serializers.ModelSerializer):
+    products = ProductQuantitySerializer(many=True)
+
+    class Meta:
+        fields = '__all__'
+        model = Order
+
+
+class OrderUpdateSerializer(WritableNestedModelSerializer, serializers.ModelSerializer):
     products = ProductQuantitySerializer(many=True)
     tasks = TaskSerializer(many=True)
 

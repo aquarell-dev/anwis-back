@@ -6,9 +6,9 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 
 from .models import ChinaDistributor, Product, OrderForProject, Order, Status, IndividualEntrepreneur, Category, Task
-from .serializer import ChinaSerializer, OrderForProjectSerializer, StatusSerializer, OrderCreateUpdateSerializer, \
+from .serializer import ChinaSerializer, OrderForProjectSerializer, StatusSerializer, OrderCreateSerializer, \
     OrderListRetrieveSerializer, IndividualEntrepreneurSerializer, ProductListRetrieveSerializer, CategorySerializer, \
-    TaskSerializer, ProductCreateSerializer
+    TaskSerializer, ProductCreateSerializer, OrderUpdateSerializer
 
 from .services import ChinaService
 
@@ -65,7 +65,7 @@ class OrderListCreateView(generics.ListCreateAPIView):
 
     def get_serializer_class(self):
         if self.request.method == 'POST':
-            return OrderCreateUpdateSerializer
+            return OrderCreateSerializer
         return OrderListRetrieveSerializer
 
 
@@ -76,7 +76,7 @@ class OrderRetrieveView(generics.RetrieveDestroyAPIView):
 
 class OrderPartialUpdateView(generics.UpdateAPIView):
     queryset = Order.objects.all()
-    serializer_class = OrderCreateUpdateSerializer
+    serializer_class = OrderUpdateSerializer
 
     def put(self, request, *args, **kwargs):
         return self.partial_update(request, *args, **kwargs)
@@ -84,7 +84,7 @@ class OrderPartialUpdateView(generics.UpdateAPIView):
 
 class OrderUpdateView(generics.UpdateAPIView):
     queryset = Order.objects.all()
-    serializer_class = OrderCreateUpdateSerializer
+    serializer_class = OrderCreateSerializer
 
 
 class StatusView(generics.ListCreateAPIView):

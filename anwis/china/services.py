@@ -116,9 +116,11 @@ class ChinaService:
         for i in range(2, last+2):
             worksheet.set_row(i, 75)
 
-        index = 0
+        start = 3
 
         for product_qty_list in products:
+            merge_cells_count = len(product_qty_list) if len(product_qty_list) >= 5 else 5
+
             if product_qty_list[0].product.photo:
                 url = request.build_absolute_uri(product_qty_list[0].product.photo.photo.url)
 
@@ -126,39 +128,37 @@ class ChinaService:
                 img = Image.open(io.BytesIO(response.content))
 
                 w, h = self._get_scales(
-                    *img.size, len(product_qty_list), 20
+                    *img.size, merge_cells_count, 20
                 )
 
                 image_data = self._get_resized_image_data(img, (w, h))
 
                 worksheet.insert_image(
-                    f'A{index + 3}',
+                    f'A{start}',
                     url,
                     {'image_data': image_data, 'y_offset': 12}
                 )
 
-            start = index + 3
-
-            for product_qty in product_qty_list:
-                index += 1
-                worksheet.write(
-                    f'B{index + 2}',
-                    str(product_qty.quantity),
-                    workbook.add_format({
-                        **centered_and_border,
-                        'font_size': 18,
-                    })
-                )
-                worksheet.write(
-                    f'C{index + 2}',
-                    str(product_qty.product.size),
-                    workbook.add_format({
-                        **centered_and_border,
-                        'font_size': 18,
-                    })
-                )
-
-            worksheet.merge_range(f'A{start}:A{index+2}', '', merge_title_format)
+            # for product_qty in product_qty_list:
+            #     index += 1
+            #     worksheet.write(
+            #         f'B{index + 2}',
+            #         str(product_qty.quantity),
+            #         workbook.add_format({
+            #             **centered_and_border,
+            #             'font_size': 18,
+            #         })
+            #     )
+            #     worksheet.write(
+            #         f'C{index + 2}',
+            #         str(product_qty.product.size),
+            #         workbook.add_format({
+            #             **centered_and_border,
+            #             'font_size': 18,
+            #         })
+            #     )
+            #
+            # worksheet.merge_range(f'A{start}:A{index+2}', '', merge_title_format)
 
         workbook.close()
 
