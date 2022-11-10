@@ -24,9 +24,9 @@ class ProductListCreateView(generics.ListCreateAPIView):
         return ProductListRetrieveSerializer
 
 
-class ProductUpdateView(generics.RetrieveUpdateDestroyAPIView):
+class ProductUpdateView(generics.UpdateAPIView):
     queryset = Product.objects.all()
-    serializer_class = ProductListRetrieveSerializer
+    serializer_class = ProductCreateSerializer
 
     def put(self, request, *args, **kwargs):
         return self.partial_update(request, *args, **kwargs)
