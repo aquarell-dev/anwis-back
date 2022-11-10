@@ -1,4 +1,5 @@
 import io
+import math
 from typing import List, Tuple
 from urllib.request import urlopen
 
@@ -20,7 +21,7 @@ uppercase = string.ascii_uppercase
 
 
 class ChinaService:
-    def _get_scales(self, orig_w: int, orig_h: int, n: int, y_offset: int) -> Tuple[float, float]:
+    def _get_scales(self, orig_w: int, orig_h: int, n: int, y_offset: int) -> Tuple[int, int]:
         """
         Get the scales and maintain the aspect ratio.
 
@@ -40,7 +41,7 @@ class ChinaService:
         des_h = self._cell_height * n - y_offset * 2
         new_w = des_h * orig_w / orig_h
 
-        return new_w, des_h
+        return math.floor(new_w), math.floor(des_h)
 
     def _get_resized_image_data(self, im: Image, bound_width_height):
         # get the image and resize it
@@ -125,7 +126,7 @@ class ChinaService:
                 img = Image.open(io.BytesIO(response.content))
 
                 w, h = self._get_scales(
-                    *img.size, len(product_qty_list), 1
+                    *img.size, len(product_qty_list), 20
                 )
 
                 image_data = self._get_resized_image_data(img, (w, h))
@@ -133,7 +134,7 @@ class ChinaService:
                 worksheet.insert_image(
                     f'A{index + 3}',
                     url,
-                    {'image_data': image_data}
+                    {'image_data': image_data, 'y_offset': 12}
                 )
 
             start = index + 3
