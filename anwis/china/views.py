@@ -32,9 +32,21 @@ class ProductUpdateView(generics.UpdateAPIView):
         return self.partial_update(request, *args, **kwargs)
 
 
-class ProductRetrieveDestoryView(generics.RetrieveDestroyAPIView):
+class ProductRetrieveDestroyView(generics.RetrieveDestroyAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductListRetrieveSerializer
+
+
+class ProductDestroyMultipleView(views.APIView):
+    def delete(self, request):
+        products_for_deletion = self.request.query_params.get('products')
+
+        if not products_for_deletion:
+            return Response({'status': 'error', 'message': 'Specify products'}, status=400)
+
+        Product.objects.filter(id__in=products_for_deletion.split(',')).delete()
+
+        return Response({'status': 'ok'}, status=200)
 
 
 class FormExcelView(views.APIView):
