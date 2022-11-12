@@ -5,6 +5,6 @@ class LeftoverConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'leftover'
 
-    def ready(self):
-        from .updater import start
-        start()
+    # def ready(self):
+    #     from .updater import start
+    #     start()
