@@ -18,6 +18,7 @@ urlpatterns = [
     path('api/', include('china.urls')),
     path('api/', include('leftover.urls')),
     path('api/', include('documents.urls')),
+    path('api/', include('acceptance.urls')),
 ]
 
 if settings.DEBUG:

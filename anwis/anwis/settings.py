@@ -24,7 +24,8 @@ INSTALLED_APPS = [
 
     'china.apps.ChinaConfig',
     'leftover.apps.LeftoverConfig',
-    'documents.apps.DocumentsConfig'
+    'documents.apps.DocumentsConfig',
+    'acceptance.apps.AcceptanceConfig',
 ]
 
 MIDDLEWARE = [
