@@ -1,7 +1,5 @@
 from django.db import models
 
-from china.models import ProductQuantity
-
 
 class Acceptance(models.Model):
     title = models.CharField('Название', max_length=64)
