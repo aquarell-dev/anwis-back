@@ -88,6 +88,7 @@ class OrderListRetrieveSerializer(serializers.ModelSerializer):
     products = ProductQuantityDetailedSerializer(many=True)
     tasks = TaskSerializer(many=True)
     documents = serializers.SerializerMethodField()
+    acceptance = serializers.SlugRelatedField(slug_field='id', read_only=True)
 
     def get_documents(self, obj: Order):
         request = self.context.get('request')

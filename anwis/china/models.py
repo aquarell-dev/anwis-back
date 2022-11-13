@@ -146,6 +146,7 @@ class Order(models.Model):
     excel = models.FileField('Эксель', upload_to='documents/auto/', blank=True, null=True)
     documents = models.ManyToManyField(Document, verbose_name='Картинки', blank=True)
     archive = models.BooleanField('Архив', default=False)
+    acceptance = models.ForeignKey('acceptance.Acceptance', verbose_name='Приемка', blank=True, null=True, on_delete=models.SET_NULL)
 
     products = models.ManyToManyField(ProductQuantity, verbose_name='Товары')
 

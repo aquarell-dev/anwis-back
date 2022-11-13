@@ -10,7 +10,7 @@ class Acceptance(models.Model):
     cargo_weight = models.CharField('Вес карго', null=True, blank=True, max_length=256)
     arrived_in_moscow = models.DateField('Дата приезда в Москву', blank=True, null=True)
     shipped_from_china = models.DateField('Дата отправки из Китая', blank=True, null=True)
-    products = models.ManyToManyField(ProductQuantity, blank=True)
+    products = models.ManyToManyField('china.ProductQuantity', blank=True)
     custom_id = models.CharField(unique=True, max_length=10, editable=False, blank=True, null=True)
     created_at = models.DateTimeField('Дата создания', auto_now_add=True)
 
