@@ -10,3 +10,9 @@ class AcceptanceListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Acceptance
         fields = '__all__'
+
+
+class AcceptanceCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Acceptance
+        fields = '__all__'

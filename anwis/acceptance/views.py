@@ -1,12 +1,16 @@
 from rest_framework import generics
 
 from acceptance.models import Acceptance
-from acceptance.serializers import AcceptanceListSerializer
+from acceptance.serializers import AcceptanceListSerializer, AcceptanceCreateSerializer
 
 
 class AcceptanceListCreateView(generics.ListCreateAPIView):
     queryset = Acceptance.objects.all()
-    serializer_class = AcceptanceListSerializer
+
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return AcceptanceCreateSerializer
+        return AcceptanceListSerializer
 
 
 class AcceptanceRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
