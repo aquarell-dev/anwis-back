@@ -1,7 +1,7 @@
 from rest_framework import generics
 
-from acceptance.models import Acceptance
-from acceptance.serializers import AcceptanceListSerializer, AcceptanceCreateSerializer
+from acceptance.models import Acceptance, StaffMember
+from acceptance.serializers import AcceptanceListSerializer, AcceptanceCreateSerializer, StaffMemberSerializer
 
 
 class AcceptanceListCreateView(generics.ListCreateAPIView):
@@ -16,3 +16,13 @@ class AcceptanceListCreateView(generics.ListCreateAPIView):
 class AcceptanceRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Acceptance.objects.all()
     serializer_class = AcceptanceListSerializer
+
+
+class StaffMemberListCreateView(generics.ListCreateAPIView):
+    queryset = StaffMember.objects.all()
+    serializer_class = StaffMemberSerializer
+
+
+class StaffMemberRetrieveDestroyRetrieveView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = StaffMember.objects.all()
+    serializer_class = StaffMemberSerializer

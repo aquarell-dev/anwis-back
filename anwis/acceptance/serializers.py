@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from acceptance.models import Acceptance
+from acceptance.models import Acceptance, StaffMember
 from china.serializer import ProductQuantityDetailedSerializer
 
 
@@ -16,3 +16,9 @@ class AcceptanceCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Acceptance
         fields = '__all__'
+
+
+class StaffMemberSerializer(serializers.ModelSerializer):
+    class Meta:
+        fields = '__all__'
+        model = StaffMember

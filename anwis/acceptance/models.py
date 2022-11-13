@@ -18,3 +18,17 @@ class Acceptance(models.Model):
     class Meta:
         verbose_name = 'Приемка'
         verbose_name_plural = 'Приемки'
+
+
+class StaffMember(models.Model):
+    username = models.CharField('Юзер', max_length=264, unique=True)
+    password = models.CharField('Пароль', max_length=264)
+    inactive = models.BooleanField('Деактивирован', default=False)
+    temporary = models.BooleanField('Временный', default=False)
+
+    def __str__(self):
+        return self.username
+
+    class Meta:
+        verbose_name = 'Сотрудник'
+        verbose_name_plural = 'Сотрудники'
