@@ -1,7 +1,7 @@
 from drf_writable_nested import WritableNestedModelSerializer
 from rest_framework import serializers
 
-from .models import ChinaDistributor, Product, OrderForProject, Order, Status, IndividualEntrepreneur, ProductQuantity,\
+from .models import ChinaDistributor, Product, OrderForProject, Order, Status, IndividualEntrepreneur, ProductInfo,\
     Category, Task
 
 
@@ -58,7 +58,7 @@ class ProductCreateSerializer(serializers.ModelSerializer):
 class ProductQuantitySerializer(serializers.ModelSerializer):
     class Meta:
         fields = '__all__'
-        model = ProductQuantity
+        model = ProductInfo
 
 
 class ProductQuantityDetailedSerializer(ProductQuantitySerializer):

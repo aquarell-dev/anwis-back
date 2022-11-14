@@ -15,7 +15,7 @@ from django.core.files import File
 from rest_framework.generics import get_object_or_404
 from rest_framework.request import Request
 
-from china.models import Order, Product, ProductQuantity
+from china.models import Order, Product, ProductInfo
 
 uppercase = string.ascii_uppercase
 
@@ -111,8 +111,8 @@ class ChinaService:
 
         articles = [product.product.article for product in order.products.all()]
 
-        products: List[List[ProductQuantity]] = [order.products.filter(product__article=article)
-                                                 for article in list(set(articles))]
+        products: List[List[ProductInfo]] = [order.products.filter(product__article=article)
+                                             for article in list(set(articles))]
 
         start = 3
 

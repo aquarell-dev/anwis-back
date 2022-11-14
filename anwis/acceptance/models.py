@@ -1,5 +1,8 @@
 from django.db import models
 
+from common.models import CommonProduct, CommonCategory
+from documents.models import Photo
+
 
 class Acceptance(models.Model):
     title = models.CharField('Название', max_length=64)
@@ -8,7 +11,7 @@ class Acceptance(models.Model):
     cargo_weight = models.CharField('Вес карго', null=True, blank=True, max_length=256)
     arrived_in_moscow = models.DateField('Дата приезда в Москву', blank=True, null=True)
     shipped_from_china = models.DateField('Дата отправки из Китая', blank=True, null=True)
-    products = models.ManyToManyField('china.ProductQuantity', blank=True)
+    products = models.ManyToManyField('china.ProductInfo', blank=True)
     custom_id = models.CharField(unique=True, max_length=10, editable=False, blank=True, null=True)
     created_at = models.DateTimeField('Дата создания', auto_now_add=True)
 
@@ -32,3 +35,26 @@ class StaffMember(models.Model):
     class Meta:
         verbose_name = 'Сотрудник'
         verbose_name_plural = 'Сотрудники'
+
+
+class AcceptanceCategory(CommonCategory):
+    def __str__(self):
+        return self.id
+
+    class Meta:
+        verbose_name = 'Категория'
+        verbose_name_plural = 'Категории'
+
+
+class Product(CommonProduct):
+    photo = models.ForeignKey(Photo, verbose_name='Картинка', blank=True, null=True, on_delete=models.SET_NULL,
+                              related_name='acceptance_photo_product')
+    category = models.ForeignKey(AcceptanceCategory, verbose_name='Категория', on_delete=models.SET_NULL, blank=True,
+                                 null=True)
+
+    def __str__(self):
+        return self.id
+
+    class Meta:
+        verbose_name = 'Продукт'
+        verbose_name_plural = 'Продукты'

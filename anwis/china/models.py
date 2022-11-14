@@ -1,6 +1,7 @@
 from django.db import models
 
 from acceptance.models import Acceptance
+from common.models import CommonProduct, CommonCategory
 from documents.models import Photo, Document
 
 
@@ -51,9 +52,7 @@ class Status(models.Model):
         verbose_name_plural = 'Статусы'
 
 
-class Category(models.Model):
-    category = models.CharField('Категория', unique=True, max_length=60)
-
+class Category(CommonCategory):
     def __str__(self):
         return self.category
 
@@ -62,16 +61,11 @@ class Category(models.Model):
         verbose_name_plural = 'Категории'
 
 
-class Product(models.Model):
-    title = models.CharField('Название товара', max_length=100)
-    article = models.CharField('Артикул поставщика', max_length=100)
-    photo = models.ForeignKey(Photo, verbose_name='Картинка', blank=True, null=True, on_delete=models.SET_NULL)
-    color = models.CharField('Цвет', max_length=100)
-    size = models.CharField('Размер', max_length=100, blank=True, null=True)
-    brand = models.CharField('Брэнд', max_length=100)
+class Product(CommonProduct):
     url = models.URLField('Ссылка на товар', blank=True, null=True)
-    category = models.ForeignKey(Category, verbose_name='Категория', on_delete=models.CASCADE, blank=True,
+    category = models.ForeignKey(Category, verbose_name='Категория', on_delete=models.SET_NULL, blank=True,
                                  null=True)
+    photo = models.ForeignKey(Photo, verbose_name='Картинка', blank=True, null=True, on_delete=models.SET_NULL)
 
     def __str__(self):
         return f'{self.article}, {self.title}'
@@ -81,7 +75,7 @@ class Product(models.Model):
         verbose_name_plural = 'Товары'
 
 
-class ProductQuantity(models.Model):
+class ProductInfo(models.Model):
     quantity = models.PositiveSmallIntegerField('Кол-во товаров')
     product = models.ForeignKey(Product, verbose_name='Продукт', on_delete=models.CASCADE)
     price_cny = models.DecimalField('Цена в юанях', decimal_places=2, max_digits=12, default=0)
@@ -149,7 +143,7 @@ class Order(models.Model):
     archive = models.BooleanField('Архив', default=False)
     acceptance = models.ForeignKey(Acceptance, verbose_name='Приемка', blank=True, null=True, on_delete=models.SET_NULL)
 
-    products = models.ManyToManyField(ProductQuantity, verbose_name='Товары')
+    products = models.ManyToManyField(ProductInfo, verbose_name='Товары')
 
     def __str__(self):
         return f'Заказ №{self.id}'

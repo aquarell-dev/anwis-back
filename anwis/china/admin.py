@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.utils.safestring import mark_safe
 
 from utils.mixins import ImagePreviewMixin
-from .models import ChinaDistributor, Product, OrderForProject, Order, Status, IndividualEntrepreneur, ProductQuantity, \
+from .models import ChinaDistributor, Product, OrderForProject, Order, Status, IndividualEntrepreneur, ProductInfo, \
     Category, Task
 
 
@@ -75,9 +75,9 @@ class ProductAdmin(ImagePreviewMixin, admin.ModelAdmin):
     preview_image.short_description = 'Картинка'
 
 
-@admin.register(ProductQuantity)
+@admin.register(ProductInfo)
 class ProductQuantityAdmin(admin.ModelAdmin):
-    list_display = [field.name for field in ProductQuantity._meta.get_fields() if field.name not in ['order']]
+    list_display = [field.name for field in ProductInfo._meta.get_fields() if field.name not in ['order']]
     list_display_links = ['id']
 
 
