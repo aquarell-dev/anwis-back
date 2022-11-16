@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from acceptance.models import Acceptance, StaffMember, Product
+from acceptance.models import Acceptance, StaffMember, Product, AcceptanceCategory
 
 
 @admin.register(Acceptance)
@@ -15,6 +15,15 @@ class StaffMemberAdmin(admin.ModelAdmin):
     list_display = [
         field.name for field in StaffMember._meta.get_fields()
         # if field.name not in []
+    ]
+    list_display_links = ['id']
+
+
+@admin.register(AcceptanceCategory)
+class AcceptanceCategoryAdmin(admin.ModelAdmin):
+    list_display = [
+        field.name for field in AcceptanceCategory._meta.get_fields()
+        if field.name not in ['product']
     ]
     list_display_links = ['id']
 

@@ -45,7 +45,7 @@ class ProductListRetrieveSerializer(serializers.ModelSerializer):
             return obj.photo.id
 
     class Meta:
-        fields = [field.name for field in Product._meta.get_fields() if field.name not in ['productquantity']] + ['photo_id']
+        fields = [field.name for field in Product._meta.get_fields() if field.name not in ['productinfo']] + ['photo_id']
         model = Product
 
 

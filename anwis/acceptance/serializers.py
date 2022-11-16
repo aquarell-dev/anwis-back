@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from acceptance.models import Acceptance, StaffMember, AcceptanceCategory
+from acceptance.models import Acceptance, StaffMember, AcceptanceCategory, Product
 from china.serializer import ProductQuantityDetailedSerializer
 
 
@@ -31,4 +31,6 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class ProductSerializer(serializers.ModelSerializer):
-    pass
+    class Meta:
+        model = Product
+        fields = '__all__'
