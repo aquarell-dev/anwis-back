@@ -1,0 +1,37 @@
+<div class="wrapper">
+    <div>
+        <p class="prop-title">НАИМЕНОВАНИЕ ТОВАРА:</p>
+        <p class="prop-value">{{ title }}</p>
+    </div>
+    <div class="flexed">
+        <span class="prop-title">Артикул:</span>
+        <p class="prop-value">{{ article }}</p>
+    </div>
+    <div class="flexed">
+        <span class="prop-title">Размер:</span>
+        <p class="prop-value">{{ size }}</p>
+    </div>
+    <div class="flexed">
+        <span class="prop-title">Цвет:</span>
+        <p class="prop-value">{{ color }}</p>
+    </div>
+
+    <div class="space"></div>
+    <div class="flexed">
+        <span class="prop-title">Состав:</span>
+        <p class="prop-value">{{ composition }}</p>
+    </div>
+    <div class="space"></div>
+    <div class="flexed">
+        <span class="prop-title">Адрес:</span>
+        <p class="prop-value">{{ address }}</p>
+    </div>
+    <img class="eac" src="https://www.engalservices.com/cms-contents/uploads/label-eac-mark-black.png"/>
+    <div class="individual">
+        <p>{{ individual }}</p>
+    </div>
+    <div class="current_date">
+        <p><span style="font-weight: bold">Дата: </span>{{ current_date }}</p>
+    </div>
+    <img class='barcode' src='{{ label_tools.barcode(barcode, barcode_class='code128')}}'/>
+</div>
