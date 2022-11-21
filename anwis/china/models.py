@@ -138,7 +138,7 @@ class Order(models.Model):
     total_delivery = models.FloatField('Цена за доствку, $', default=0)
     real_total_delivery = models.FloatField('Фактическая цена за доставку, $', default=0)
     dollar_to_rub = models.FloatField('Курс, $ к ₽', default=0)
-    delivery_expenses = models.FloatField('Фактическая цена за доставку, $', default=0)
+    delivery_expenses = models.FloatField('Доп. затраты за доставку, ₽', default=0)
     packages = models.PositiveIntegerField('Кол-во грузовых мест', default=0)
     delivered = models.BooleanField('Доставлен', default=False)
     excel = models.FileField('Эксель', upload_to='documents/auto/', blank=True, null=True)

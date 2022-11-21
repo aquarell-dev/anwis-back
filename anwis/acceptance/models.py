@@ -33,10 +33,11 @@ class Product(CommonProduct):
     category = models.ForeignKey(AcceptanceCategory, verbose_name='Категория', on_delete=models.SET_NULL, blank=True,
                                  null=True)
     last_cost = models.FloatField('Себестоимость', blank=True, null=True)
-    linked_china_product_article = models.CharField('Артикул Китайского Товара', max_length=100, blank=True, null=True,
-                                                )
-    linked_china_product_size = models.CharField('Размер Китайского Товара', max_length=100, blank=True, null=True,
-                                            )
+    barcode = models.CharField('Штрих-код', max_length=100, null=True, blank=True)
+    wb_article = models.CharField('Артикул ВБ', max_length=100, null=True, blank=True)
+    linked_china_product_article = models.CharField('Артикул Китайского Товара', max_length=100, blank=True, null=True)
+    linked_china_product_size = models.CharField('Размер Китайского Товара', max_length=100, blank=True, null=True)
+    total_left = models.PositiveIntegerField('Остаток', null=True, blank=True)
 
     def __str__(self):
         return str(self.id)
