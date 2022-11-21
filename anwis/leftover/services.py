@@ -1,30 +1,10 @@
-from datetime import timezone, datetime
+from datetime import datetime
 from typing import List
 import pytz
 
-import requests
-
+from common.services import fetch_leftovers
 from .types import TLeftOver, TLeftOverSpecification
 from .models import LeftOver
-
-_headers = {
-    "Content-Type": "application/json",
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:106.0) Gecko/20100101 Firefox/106.0",
-    "Accept": "application/json, text/plain, */*",
-    "Connection": "keep-alive"
-}
-
-
-def _fetch_leftovers(nms: list):
-    nm_string = ';'.join(nms)
-    response = requests.get(
-        f'https://card.wb.ru/cards/basket?spp=27&regions=80,68,64,83,4,38,33,70,82,69,86,30,40,48,1,22,66,'
-        f'31&pricemarginCoeff=1.0&reg=1&appType=1&emp=0&locale=ru&lang=ru&curr=rub&couponsGeo=12,7,3,6,18,'
-        f'21&sppFixGeo=4&dest=-1029256,-72181,-1144811,12358288&nm={nm_string}',
-        headers=_headers
-    )
-
-    return response.json()
 
 
 def _parse_leftover_specs(leftover: dict) -> List[TLeftOverSpecification]:
@@ -42,7 +22,7 @@ def _parse_leftover_specs(leftover: dict) -> List[TLeftOverSpecification]:
 
 
 def get_leftover(nm: str) -> TLeftOver:
-    response = _fetch_leftovers([nm])
+    response = fetch_leftovers([nm])
 
     leftover = response['data']['products'][0]
 
@@ -70,7 +50,7 @@ def update_leftovers(nms: list = None, buffer_update: bool = True):
     if buffer_update:
         print('update buffer')
 
-    response = _fetch_leftovers(nms)
+    response = fetch_leftovers(nms)
 
     products = response['data']['products']
 
