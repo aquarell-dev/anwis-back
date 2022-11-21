@@ -7,7 +7,8 @@ from rest_framework.views import APIView
 from acceptance.models import Acceptance, StaffMember, Product, AcceptanceCategory
 from acceptance.serializers import AcceptanceListSerializer, AcceptanceCreateSerializer, StaffMemberSerializer, \
     ProductSerializer, CategorySerializer
-from acceptance.service import create_acceptance_from_order, update_acceptance_from_order
+from acceptance.service import create_acceptance_from_order, update_acceptance_from_order, create_label, \
+    update_leftovers, update_colors
 from china.models import Order
 
 
@@ -34,9 +35,9 @@ class AcceptanceCreateFromOrder(APIView):
 
         order = get_object_or_404(Order, pk=order_id)
 
-        create_acceptance_from_order(order)
+        acceptance = create_acceptance_from_order(order)
 
-        return Response({'status': 'ok'}, status=201)
+        return Response({'status': 'ok', 'acceptance_id': acceptance.id}, status=201)
 
 
 class AcceptanceUpdateFromOrder(APIView):
@@ -75,6 +76,56 @@ class ProductListCreateView(generics.ListCreateAPIView):
     serializer_class = ProductSerializer
 
 
+class ProductRetrieveDestroyUpdateView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+
+    def put(self, request, *args, **kwargs):
+        return self.partial_update(request, *args, **kwargs)
+
+
 class CategoryView(generics.ListCreateAPIView):
-    queryset = AcceptanceCategory
+    queryset = AcceptanceCategory.objects.all()
     serializer_class = CategorySerializer
+
+
+class CategoryDetailedView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = AcceptanceCategory.objects.all()
+    serializer_class = CategorySerializer
+
+
+class GenerateLabelsView(APIView):
+    def put(self, request: Request):
+        mandatory_fiels = (
+            'title',
+            'barcode',
+            'article',
+            'size',
+            'color',
+            'quantity',
+            'individual',
+            'composition',
+            'address',
+        )
+
+        for field in mandatory_fiels:
+            try:
+                request.data[field]
+            except KeyError:
+                return Response({'status': 'error', 'message': f'provide {field} field'}, status=400)
+
+        url = create_label(request.data)
+
+        return Response({'status': 'ok', 'url': request.build_absolute_uri(url)}, status=200)
+
+
+class UpdateProductLeftoversView(APIView):
+    def put(self, *args, **kwargs):
+        update_leftovers()
+        return Response({'status': 'ok'}, status=200)
+
+
+class UpdateProductColorsView(APIView):
+    def put(self, *args, **kwargs):
+        update_colors()
+        return Response({'status': 'ok'}, status=200)
