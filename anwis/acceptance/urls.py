@@ -4,7 +4,7 @@ from acceptance.views import AcceptanceListCreateView, AcceptanceRetrieveUpdateD
     StaffMemberRetrieveDestroyRetrieveView, ProductListCreateView, AcceptanceCreateFromOrder, AcceptanceUpdateFromOrder, \
     CategoryDetailedView, CategoryView, ProductRetrieveDestroyUpdateView, GenerateLabelsView, \
     UpdateProductLeftoversView, \
-    UpdateProductColorsView
+    UpdateProductColorsView, UpdateMultipleCategoriesView
 
 urlpatterns = [
     path('acceptances/', AcceptanceListCreateView.as_view()),
@@ -25,4 +25,5 @@ urlpatterns = [
 
     path('acceptance/update-leftovers/', UpdateProductLeftoversView.as_view()),
     path('acceptance/update-colors/', UpdateProductColorsView.as_view()),
+    path('acceptance/update-categories/', UpdateMultipleCategoriesView.as_view()),
 ]

@@ -8,7 +8,7 @@ from acceptance.models import Acceptance, StaffMember, Product, AcceptanceCatego
 from acceptance.serializers import AcceptanceListSerializer, AcceptanceCreateSerializer, StaffMemberSerializer, \
     ProductSerializer, CategorySerializer
 from acceptance.service import create_acceptance_from_order, update_acceptance_from_order, create_label, \
-    update_leftovers, update_colors
+    update_leftovers, update_colors, update_multiple_categories
 from china.models import Order
 
 
@@ -128,4 +128,14 @@ class UpdateProductLeftoversView(APIView):
 class UpdateProductColorsView(APIView):
     def put(self, *args, **kwargs):
         update_colors()
+        return Response({'status': 'ok'}, status=200)
+
+
+class UpdateMultipleCategoriesView(APIView):
+    def put(self, request):
+        status = update_multiple_categories(request.data)
+
+        if status == 0:
+            return Response({'status': 'error'}, status=400)
+
         return Response({'status': 'ok'}, status=200)

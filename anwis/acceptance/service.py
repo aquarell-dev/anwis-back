@@ -213,3 +213,15 @@ def update_colors():
         for p in russian_products:
             p.color = ', '.join([color['name'] for color in product['colors']])
             p.save()
+
+
+def update_multiple_categories(data: dict):
+    products = data.get('products', None)
+    category = data.get('category', None)
+
+    if not products:
+        return 0
+
+    Product.objects.filter(id__in=list(map(int, products))).update(category_id=int(category))
+
+    return 1
