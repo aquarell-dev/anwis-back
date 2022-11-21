@@ -1,0 +1,84 @@
+@page {
+    width: 40mm;
+    height: 58mm;
+    padding: 0.5mm 1mm;
+    size: landscape;
+}
+
+p {
+    margin: 0;
+    padding: 0;
+}
+
+.wrapper {
+    width: 40mm;
+    height: 58mm;
+    position: relative;
+}
+
+.space {
+    height: .5mm;
+    width: 1mm;
+}
+
+.flexed {
+    display: flex;
+    align-items: center;
+    margin: 1mm 0;
+}
+
+.current_date {
+    position: fixed;
+    right: -13.5%;
+    top: 38%;
+    transform: translateY(-50%);
+    z-index: 100;
+}
+
+.individual {
+    position: fixed;
+    right: -13.5%;
+    top: 14%;
+    transform: translateY(-50%);
+    z-index: 100;
+}
+
+.individual p {
+    transform: rotate(-90deg);
+    font-size: 5px;
+}
+
+.eac {
+    width: 7mm;
+    position: fixed;
+    right: 10%;
+    top: 25%;
+    transform: translateY(-50%);
+}
+
+.current_date p {
+    transform: rotate(-90deg);
+    font-size: 5px;
+}
+
+img {
+    width: 42mm;
+    image-rendering: pixelated;
+}
+
+.prop-title {
+    font-weight: bold;
+    font-size: 7px;
+}
+
+.prop-value {
+    font-size: 5px;
+    max-width: 90%;
+}
+
+.barcode {
+    position: absolute;
+    z-index: 50;
+    bottom: 0;
+    left: 0;
+}
