@@ -1,3 +1,4 @@
+from drf_writable_nested import WritableNestedModelSerializer
 from rest_framework import serializers
 
 from acceptance.models import Acceptance, StaffMember, AcceptanceCategory, Product, ProductSpecification
@@ -44,6 +45,18 @@ class ProductSerializer(serializers.ModelSerializer):
         ] + ['photo_id']
 
 
+class ProductCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = '__all__'
+
+
+class ProductSpecificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        fields = '__all__'
+        model = ProductSpecification
+
+
 class ProductSpecificationDetailedSerializer(serializers.ModelSerializer):
     product = ProductSerializer()
 
@@ -54,6 +67,14 @@ class ProductSpecificationDetailedSerializer(serializers.ModelSerializer):
 
 class AcceptanceListSerializer(serializers.ModelSerializer):
     products = ProductSpecificationDetailedSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Acceptance
+        fields = '__all__'
+
+
+class AcceptanceDetailedUpdateSerializer(WritableNestedModelSerializer, serializers.ModelSerializer):
+    products = ProductSpecificationSerializer(many=True)
 
     class Meta:
         model = Acceptance

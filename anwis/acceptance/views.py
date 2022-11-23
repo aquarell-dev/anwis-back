@@ -2,13 +2,15 @@ from django.shortcuts import get_object_or_404
 from rest_framework import generics
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.serializers import ModelSerializer
 from rest_framework.views import APIView
 
-from acceptance.models import Acceptance, StaffMember, Product, AcceptanceCategory
+from acceptance.models import Acceptance, StaffMember, Product, AcceptanceCategory, ProductSpecification
 from acceptance.serializers import AcceptanceListSerializer, AcceptanceCreateSerializer, StaffMemberSerializer, \
-    ProductSerializer, CategorySerializer
+    ProductSerializer, CategorySerializer, ProductCreateSerializer, AcceptanceDetailedUpdateSerializer, \
+    ProductSpecificationSerializer
 from acceptance.service import create_acceptance_from_order, update_acceptance_from_order, create_label, \
-    update_leftovers, update_colors, update_multiple_categories
+    update_leftovers, update_colors, update_multiple_categories, create_multiple_products, update_photos_from_wb
 from china.models import Order
 
 
@@ -61,6 +63,22 @@ class AcceptanceUpdateFromOrder(APIView):
         return Response({'status': 'ok'}, status=201)
 
 
+class AcceptanceDetailedUpdate(generics.UpdateAPIView):
+    queryset = Acceptance.objects.all()
+    serializer_class = AcceptanceDetailedUpdateSerializer
+
+    def put(self, request, *args, **kwargs):
+        return self.partial_update(request, *args, **kwargs)
+
+
+class ProductSpecificationPartialUpdateView(generics.UpdateAPIView):
+    queryset = ProductSpecification.objects.all()
+    serializer_class = ProductSpecificationSerializer
+
+    def put(self, request, *args, **kwargs):
+        return self.partial_update(request, *args, **kwargs)
+
+
 class StaffMemberListCreateView(generics.ListCreateAPIView):
     queryset = StaffMember.objects.all()
     serializer_class = StaffMemberSerializer
@@ -73,15 +91,47 @@ class StaffMemberRetrieveDestroyRetrieveView(generics.RetrieveUpdateDestroyAPIVi
 
 class ProductListCreateView(generics.ListCreateAPIView):
     queryset = Product.objects.all()
-    serializer_class = ProductSerializer
+
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return ProductCreateSerializer
+        return ProductSerializer
 
 
 class ProductRetrieveDestroyUpdateView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Product.objects.all()
-    serializer_class = ProductSerializer
+
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return ProductSerializer
+        return ProductCreateSerializer
 
     def put(self, request, *args, **kwargs):
         return self.partial_update(request, *args, **kwargs)
+
+
+class DeleteMultipleProductsView(APIView):
+    def put(self, request):
+        delete_products_ids = request.data.pop('products', None)
+
+        if not delete_products_ids:
+            return Response({'status': 'error', 'message': 'provide product ids'}, status=400)
+
+        Product.objects.filter(id__in=delete_products_ids).delete()
+
+        return Response({'status': 'ok'}, status=204)
+
+
+class CreateMultipleProducts(APIView):
+    def post(self, request):
+        products = request.data.pop('products', None)
+
+        if not products:
+            return Response({'status': 'error', 'message': 'provide products'}, status=200)
+
+        create_multiple_products(products)
+
+        return Response({'status': 'ok'}, status=200)
 
 
 class CategoryView(generics.ListCreateAPIView):
@@ -96,7 +146,7 @@ class CategoryDetailedView(generics.RetrieveUpdateDestroyAPIView):
 
 class GenerateLabelsView(APIView):
     def put(self, request: Request):
-        mandatory_fiels = (
+        mandatory_fields = (
             'title',
             'barcode',
             'article',
@@ -106,9 +156,10 @@ class GenerateLabelsView(APIView):
             'individual',
             'composition',
             'address',
+            'category'
         )
 
-        for field in mandatory_fiels:
+        for field in mandatory_fields:
             try:
                 request.data[field]
             except KeyError:
@@ -137,5 +188,17 @@ class UpdateMultipleCategoriesView(APIView):
 
         if status == 0:
             return Response({'status': 'error'}, status=400)
+
+        return Response({'status': 'ok'}, status=200)
+
+
+class ParsePhotosView(APIView):
+    def put(self, request):
+        articles = request.data.pop('articles', None)
+
+        if not articles:
+            return Response({'status': 'error'}, status=400)
+
+        update_photos_from_wb(articles)
 
         return Response({'status': 'ok'}, status=200)

@@ -18,6 +18,18 @@ class StaffMember(models.Model):
         verbose_name_plural = 'Сотрудники'
 
 
+class Box(models.Model):
+    box = models.CharField('Номер Коробки', max_length=24)
+    quantity = models.PositiveIntegerField('Кол-во товаров в коробке')
+
+    def __str__(self):
+        return self.box
+
+    class Meta:
+        verbose_name = 'Коробка'
+        verbose_name_plural = 'Коробки'
+
+
 class AcceptanceCategory(CommonCategory):
     def __str__(self):
         return str(self.id)
@@ -49,8 +61,10 @@ class Product(CommonProduct):
 
 class ProductSpecification(models.Model):
     quantity = models.PositiveSmallIntegerField('Количество товаров')
+    actual_quantity = models.PositiveSmallIntegerField('Фактическое Количество Товаров', blank=True, null=True)
     product = models.ForeignKey(Product, verbose_name='Товар', on_delete=models.CASCADE)
     cost = models.FloatField('Себестоимость', blank=True, null=True)
+    boxes = models.ManyToManyField(Box, verbose_name='Коробки', blank=True)
 
     def __str__(self):
         return f'{self.product.title}, {self.cost}, {self.quantity}'

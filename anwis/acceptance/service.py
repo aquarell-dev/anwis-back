@@ -1,7 +1,12 @@
 import os
 from datetime import datetime
+from typing import List
+from django.core.files.temp import NamedTemporaryFile
+
+import requests
 
 from acceptance.models import Acceptance, Product, ProductSpecification, AcceptanceCategory
+from acceptance.serializers import ProductCreateSerializer
 from china.models import Order, ProductInfo
 
 from blabel import LabelWriter
@@ -10,7 +15,7 @@ from common.services import fetch_leftovers, save_to_default_storage
 
 from django.core.files import File
 
-from documents.models import Document
+from documents.models import Document, Photo
 
 
 def _does_russian_product_exist(**kwargs):
@@ -71,7 +76,6 @@ def _patch_or_add_missing_products(order: Order, acceptance: Acceptance):
             product.last_cost = _calculate_self_cost(specification, order)
             category = specification.product.category
             if category:
-                print(category)
                 product.category = AcceptanceCategory.objects.get_or_create(category=category.category)[0]
             product.save()
 
@@ -138,15 +142,32 @@ def update_acceptance_from_order(acceptance: Acceptance, order: Order):
 
 
 def create_label(data: dict):
+    adult_category = str(data.pop('category')).lower() == 'товары для взрослых'
+
+    default_label_path = os.path.join(os.getcwd(), 'acceptance', 'labels', 'label_template.html')
+    default_styles = (os.path.join(os.getcwd(), 'acceptance', 'labels', 'style.css'),)
+
+    adult_label_path = os.path.join(os.getcwd(), 'acceptance', 'labels', 'adult_label_template.html')
+    adult_styles = (os.path.join(os.getcwd(), 'acceptance', 'labels', 'adult_styles.css'),)
+
     label_writer = LabelWriter(
-        os.path.join(os.getcwd(), 'acceptance', 'labels', 'label_template.html'),
-        default_stylesheets=(os.path.join(os.getcwd(), 'acceptance', 'labels', 'style.css'),),
+        default_label_path if not adult_category else adult_label_path,
+        default_stylesheets=default_styles if not adult_category else adult_styles,
         encoding='utf-8'
     )
 
     quantity = data.pop('quantity')
 
-    records = [dict(**data, current_date=datetime.now().strftime('YY/MM/DD')) for _ in range(int(quantity))]
+    size = data.pop('size')
+
+    records = [
+        dict(
+            **data,
+            current_date=datetime.now().strftime('YY/MM/DD'),
+            size=size if str(size) != '0' else '-'
+        )
+        for _ in range(int(quantity))
+    ]
 
     temp = os.path.join(os.getcwd(), 'media', 'documents', 'temp')
 
@@ -225,3 +246,59 @@ def update_multiple_categories(data: dict):
     Product.objects.filter(id__in=list(map(int, products))).update(category_id=int(category))
 
     return 1
+
+
+def create_multiple_products(products: List[dict]):
+    for product in products:
+        serializer = ProductCreateSerializer(data=product)
+
+        if serializer.is_valid():
+            serializer.save()
+
+
+baskets = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+
+def _get_photo_probable_urls(article: str):
+    if len(article) == 9:
+        return [
+            f'https://basket-{"0" + str(basket) if len(str(basket)) == 1 else basket}.wb.ru/vol{article[:4:]}/part{article[:6:]}/{article}/images/c516x688/1.jpg'
+            for basket in baskets
+        ]
+    elif len(article) == 8:
+        return [
+            f'https://basket-{"0" + str(basket) if len(str(basket)) == 1 else basket}.wb.ru/vol{article[:3:]}/part{article[:5:]}/{article}/images/c516x688/1.jpg'
+            for basket in baskets
+        ]
+
+
+def _get_photo_response(urls: list) -> requests.Response:
+    for url in urls:
+        response = requests.get(url)
+
+        if response.status_code == 200:
+            return response
+
+
+def update_photos_from_wb(articles: list):
+    articles = list(set(list(map(str, articles))))
+
+    urls = [
+        (_get_photo_response(_get_photo_probable_urls(article)), article)
+        for article in articles
+    ]
+
+    for response, article in urls:
+        img_temp = NamedTemporaryFile()
+        img_temp.write(response.content)
+        img_temp.flush()
+
+        title = f'Auto Fetched for {article}'
+
+        photo = Photo.objects.create(
+            title=title,
+        )
+
+        photo.photo.save(os.path.basename(img_temp.name), File(img_temp), save=True)
+
+        Product.objects.filter(article=article).update(photo=photo)
