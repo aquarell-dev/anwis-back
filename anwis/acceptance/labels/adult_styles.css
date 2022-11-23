@@ -1,0 +1,30 @@
+@page {
+    width: 40mm;
+    height: 25mm;
+    padding: 0.5mm 1mm;
+    size: landscape;
+}
+
+p {
+    margin: 0;
+    padding: 0;
+}
+
+.wrapper {
+    width: 40mm;
+    height: 25mm;
+    position: relative;
+}
+
+.flexed {
+    display: flex;
+    align-items: start;
+}
+
+.barcode {
+    height: 10mm;
+}
+
+.eac {
+    width: 6mm;
+}
