@@ -1,7 +1,7 @@
 from django.db import models
 
 from acceptance.models import Acceptance
-from common.models import CommonProduct, CommonCategory
+from common.models import CommonProduct, CommonCategory, Task
 from documents.models import Photo, Document
 
 
@@ -89,18 +89,6 @@ class ProductInfo(models.Model):
     class Meta:
         verbose_name = 'Продукт/кол-во'
         verbose_name_plural = 'Продукты/кол-ва'
-
-
-class Task(models.Model):
-    task = models.TextField('Задача')
-    datetime = models.DateTimeField('Дата и время')
-
-    def __str__(self):
-        return str(self.id)
-
-    class Meta:
-        verbose_name = 'Задача'
-        verbose_name_plural = 'Задачи'
 
 
 class Order(models.Model):

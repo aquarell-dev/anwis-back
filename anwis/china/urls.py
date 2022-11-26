@@ -15,7 +15,7 @@ from .views import (
 
     CategoryListCreateView, CategoryRetrieveUpdateDestroyView,
 
-    TaskListCreateView,
+
 
     FormExcelView,
 )
@@ -45,6 +45,4 @@ urlpatterns = [
 
     path('categories/', CategoryListCreateView.as_view()),
     path('categories/<int:pk>/', CategoryRetrieveUpdateDestroyView.as_view()),
-
-    path('tasks/', TaskListCreateView.as_view()),
 ]

@@ -26,6 +26,7 @@ INSTALLED_APPS = [
     'leftover.apps.LeftoverConfig',
     'documents.apps.DocumentsConfig',
     'acceptance.apps.AcceptanceConfig',
+    'common.apps.CommonConfig'
 ]
 
 MIDDLEWARE = [

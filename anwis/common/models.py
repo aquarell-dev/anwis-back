@@ -17,3 +17,15 @@ class CommonProduct(models.Model):
 
     class Meta:
         abstract = True
+
+
+class Task(models.Model):
+    task = models.TextField('Задача')
+    datetime = models.DateTimeField('Дата и время')
+
+    def __str__(self):
+        return str(self.id)
+
+    class Meta:
+        verbose_name = 'Задача'
+        verbose_name_plural = 'Задачи'
