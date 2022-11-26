@@ -1,6 +1,7 @@
 from drf_writable_nested import WritableNestedModelSerializer
 from rest_framework import serializers
 
+from common.serializers import TaskSerializer
 from .models import ChinaDistributor, Product, OrderForProject, Order, Status, IndividualEntrepreneur, ProductInfo,\
     Category, Task
 
@@ -72,12 +73,6 @@ class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         fields = '__all__'
         model = Category
-
-
-class TaskSerializer(serializers.ModelSerializer):
-    class Meta:
-        fields = '__all__'
-        model = Task
 
 
 class OrderListRetrieveSerializer(serializers.ModelSerializer):

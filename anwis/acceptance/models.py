@@ -1,6 +1,6 @@
 from django.db import models
 
-from common.models import CommonProduct, CommonCategory
+from common.models import CommonProduct, CommonCategory, Task
 from documents.models import Photo
 
 
@@ -19,7 +19,7 @@ class StaffMember(models.Model):
 
 
 class Box(models.Model):
-    box = models.CharField('Номер Коробки', max_length=24)
+    box = models.CharField('Номер Коробки', max_length=24, unique=True)
     quantity = models.PositiveIntegerField('Кол-во товаров в коробке')
 
     def __str__(self):
@@ -81,10 +81,11 @@ class Acceptance(models.Model):
     cargo_weight = models.CharField('Вес карго', null=True, blank=True, max_length=256)
     arrived_in_moscow = models.DateField('Дата приезда в Москву', blank=True, null=True)
     shipped_from_china = models.DateField('Дата отправки из Китая', blank=True, null=True)
-    products = models.ManyToManyField(ProductSpecification, verbose_name='Товары', blank=True)
+    specifications = models.ManyToManyField(ProductSpecification, verbose_name='Товары', blank=True)
     custom_id = models.CharField(unique=True, max_length=10, editable=False, blank=True, null=True)
     created_at = models.DateTimeField('Дата создания', auto_now_add=True)
     from_order = models.PositiveIntegerField('Создан из заказа', blank=True, null=True)
+    tasks = models.ManyToManyField(Task, verbose_name='Задачи', blank=True)
 
     def __str__(self):
         return f'Приемка №{self.id}'

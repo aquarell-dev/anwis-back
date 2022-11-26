@@ -1,12 +1,17 @@
 import os
 from datetime import datetime
-from typing import List
+from typing import List, Type
 from django.core.files.temp import NamedTemporaryFile
 
 import requests
+from django.shortcuts import get_object_or_404
+from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
+from django.db import models, IntegrityError
+from rest_framework.response import Response
 
-from acceptance.models import Acceptance, Product, ProductSpecification, AcceptanceCategory
-from acceptance.serializers import ProductCreateSerializer
+from acceptance.models import Acceptance, Product, ProductSpecification, AcceptanceCategory, Box
+from acceptance.serializers import ProductSerializer, ProductSpecificationDetailedSerializer
 from china.models import Order, ProductInfo
 
 from blabel import LabelWriter
@@ -18,18 +23,19 @@ from django.core.files import File
 from documents.models import Document, Photo
 
 
-def _does_russian_product_exist(**kwargs):
+def _does_entity_exist(model: Type[models.Model], **kwargs):
     try:
-        return Product.objects.get(**kwargs)
-    except Product.DoesNotExist:
+        return model.objects.get(**kwargs)
+    except model.DoesNotExist:
         return None
+
+
+def _does_russian_product_exist(**kwargs):
+    return _does_entity_exist(Product, **kwargs)
 
 
 def _does_acceptance_exist(**kwargs):
-    try:
-        return Acceptance.objects.get(**kwargs)
-    except Product.DoesNotExist:
-        return None
+    return _does_entity_exist(Acceptance, **kwargs)
 
 
 def _calculate_self_cost(info: ProductInfo, order: Order):
@@ -84,7 +90,7 @@ def _patch_or_add_missing_products(order: Order, acceptance: Acceptance):
             selfcost = _calculate_self_cost(specification, order)
 
             if not new_specification:
-                acceptance.products.add(
+                acceptance.specifications.add(
                     ProductSpecification.objects.create(
                         product=product,
                         cost=selfcost,
@@ -95,14 +101,14 @@ def _patch_or_add_missing_products(order: Order, acceptance: Acceptance):
                 new_specification.quantity = specification.quantity
                 new_specification.cost = selfcost
                 new_specification.save()
-                already_existing_objs = [spec.id for spec in acceptance.products.all()]
-                acceptance.products.add(*already_existing_objs, new_specification.id)
+                already_existing_objs = [spec.id for spec in acceptance.specifications.all()]
+                acceptance.specifications.add(*already_existing_objs, new_specification.id)
 
             continue
 
         product, selfcost, quantity = _create_new_product(specification, order)
 
-        acceptance.products.create(
+        acceptance.specifications.create(
             cost=selfcost,
             quantity=quantity,
             product=product
@@ -198,16 +204,23 @@ def _get_total_quantity(sizes: dict, product_size: str) -> int:
     return total
 
 
+def _is_article_russian(article: str):
+    try:
+        int(article)
+    except ValueError:
+        return False
+
+    return True
+
+
 def _get_products():
     product_ids = [product.article for product in Product.objects.all()]
 
     valid_wb_ids = []
 
     for product_id in product_ids:
-        try:
+        if _is_article_russian(product_id):
             valid_wb_ids.append(int(product_id))
-        except ValueError:
-            pass
 
     valid_wb_ids = list(map(str, valid_wb_ids))
 
@@ -249,6 +262,8 @@ def update_multiple_categories(data: dict):
 
 
 def create_multiple_products(products: List[dict]):
+    from acceptance.serializers import ProductCreateSerializer
+
     for product in products:
         serializer = ProductCreateSerializer(data=product)
 
@@ -280,7 +295,10 @@ def _get_photo_response(urls: list) -> requests.Response:
             return response
 
 
-def update_photos_from_wb(articles: list):
+def update_photos_from_wb(articles: list = None):
+    if not articles:
+        articles = [product.article for product in Product.objects.all() if _is_article_russian(str(product.article))]
+
     articles = list(set(list(map(str, articles))))
 
     urls = [
@@ -302,3 +320,63 @@ def update_photos_from_wb(articles: list):
         photo.photo.save(os.path.basename(img_temp.name), File(img_temp), save=True)
 
         Product.objects.filter(article=article).update(photo=photo)
+
+
+def _patch_boxes(boxes: list, instance: ProductSpecification):
+    for box in boxes:
+        box_id = box.pop('id', None)
+
+        if not box_id:
+            try:
+                instance.boxes.create(**box)
+            except ValidationError:
+                raise serializers.ValidationError(
+                    {'status': 'error', 'message': 'Коробка с таким номером уже существует'})
+
+            return
+
+        existing_box = _does_entity_exist(Box, id=box_id)
+
+        if not existing_box:
+            try:
+                instance.boxes.create(**box)
+            except ValidationError:
+                raise serializers.ValidationError(
+                    {'status': 'error', 'message': 'Коробка с таким номером уже существует'})
+
+        existing_box.box = box['box']
+        existing_box.quantity = box['quantity']
+
+        try:
+            existing_box.save()
+        except IntegrityError:
+            raise serializers.ValidationError(
+                {'status': 'error', 'message': 'Коробка с таким номером уже существует'})
+
+        instance.boxes.add(existing_box.id)
+
+    box_numbers = [box['box'] for box in boxes]
+    instance.boxes.all().exclude(box__in=box_numbers).delete()
+
+
+def update_specification(instance: ProductSpecification, data: dict):
+    actual_quantity = data.pop('actual_quantity', None)
+    boxes = data.pop('boxes', None)
+
+    if actual_quantity:
+        instance.actual_quantity = actual_quantity
+
+    if boxes:
+        _patch_boxes(boxes, instance)
+
+    instance.save()
+
+    return instance
+
+
+def box_contents(box_number: str):
+    specification = get_object_or_404(ProductSpecification.objects.all(), boxes__box__iexact=str(box_number))
+
+    instance = ProductSpecification.objects.get(id=specification.id)
+
+    return instance.id

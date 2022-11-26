@@ -5,12 +5,13 @@ from rest_framework.response import Response
 from rest_framework.serializers import ModelSerializer
 from rest_framework.views import APIView
 
-from acceptance.models import Acceptance, StaffMember, Product, AcceptanceCategory, ProductSpecification
+from acceptance.models import Acceptance, StaffMember, Product, AcceptanceCategory, ProductSpecification, Box
 from acceptance.serializers import AcceptanceListSerializer, AcceptanceCreateSerializer, StaffMemberSerializer, \
     ProductSerializer, CategorySerializer, ProductCreateSerializer, AcceptanceDetailedUpdateSerializer, \
-    ProductSpecificationSerializer
+    ProductSpecificationSerializer, BoxSerializer
 from acceptance.service import create_acceptance_from_order, update_acceptance_from_order, create_label, \
-    update_leftovers, update_colors, update_multiple_categories, create_multiple_products, update_photos_from_wb
+    update_leftovers, update_colors, update_multiple_categories, create_multiple_products, update_photos_from_wb, \
+    update_specification, box_contents
 from china.models import Order
 
 
@@ -76,7 +77,39 @@ class ProductSpecificationPartialUpdateView(generics.UpdateAPIView):
     serializer_class = ProductSpecificationSerializer
 
     def put(self, request, *args, **kwargs):
-        return self.partial_update(request, *args, **kwargs)
+        instance = update_specification(self.get_object(), request.data)
+        serializer = ProductSpecificationSerializer(instance)
+        return Response(serializer.data)
+
+    # def put(self, request, *args, **kwargs):
+    #     return self.partial_update(request, *args, **kwargs)
+
+
+class ProductSpecificationPartialMultipleUpdateView(APIView):
+    def put(self, request):
+        specifications = request.data.pop('specifications', None)
+
+        if not specifications:
+            return Response({'error': 'provise specs'}, status=400)
+
+        response = []
+
+        for specification in specifications:
+            id = specification.pop('id', None)
+
+            if not id:
+                continue
+
+            try:
+                specification_instance = ProductSpecification.objects.get(id=int(id))
+            except ProductSpecification.DoesNotExist:
+                continue
+
+            update_specification(specification_instance, specification)
+
+            response.append({'id': specification_instance.id, 'status': 'updated'})
+
+        return Response(response, status=200)
 
 
 class StaffMemberListCreateView(generics.ListCreateAPIView):
@@ -118,6 +151,18 @@ class DeleteMultipleProductsView(APIView):
             return Response({'status': 'error', 'message': 'provide product ids'}, status=400)
 
         Product.objects.filter(id__in=delete_products_ids).delete()
+
+        return Response({'status': 'ok'}, status=204)
+
+
+class DeleteMultipleSpecificationsView(APIView):
+    def put(self, request):
+        delete_specification_ids = request.data.pop('specifications', None)
+
+        if not delete_specification_ids:
+            return Response({'status': 'error', 'message': 'provide specification ids'}, status=400)
+
+        ProductSpecification.objects.filter(id__in=delete_specification_ids).delete()
 
         return Response({'status': 'ok'}, status=204)
 
@@ -202,3 +247,29 @@ class ParsePhotosView(APIView):
         update_photos_from_wb(articles)
 
         return Response({'status': 'ok'}, status=200)
+
+
+class AddBoxToSpecification(generics.UpdateAPIView):
+    queryset = ProductSpecification.objects.all()
+    serializer_class = ProductSpecificationSerializer
+
+    def put(self, request, *args, **kwargs):
+        instance: ProductSpecification = self.get_object()
+        instance.boxes.create(
+            box='',
+            quantity=0
+        )
+        serializer = ProductSpecificationSerializer(instance)
+        return Response(serializer.data)
+
+
+class RetrieveDeleteBoxView(generics.RetrieveDestroyAPIView):
+    queryset = Box.objects.all()
+    serializer_class = BoxSerializer
+
+
+class GetProductByBoxNumber(generics.RetrieveAPIView):
+    lookup_field = 'box'
+
+    queryset = Box.objects.all()
+    serializer_class = BoxSerializer
