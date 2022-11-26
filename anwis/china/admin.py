@@ -3,7 +3,7 @@ from django.utils.safestring import mark_safe
 
 from utils.mixins import ImagePreviewMixin
 from .models import ChinaDistributor, Product, OrderForProject, Order, Status, IndividualEntrepreneur, ProductInfo, \
-    Category, Task
+    Category
 
 
 @admin.register(Status)
@@ -24,12 +24,6 @@ class StatusAdmin(ImagePreviewMixin, admin.ModelAdmin):
             )
 
     preview_color.short_description = 'Превью цвета'
-
-
-@admin.register(Task)
-class TaskAdmin(admin.ModelAdmin):
-    list_display = ['id', 'task', 'datetime']
-    list_display_links = ['id']
 
 
 @admin.register(ChinaDistributor)
