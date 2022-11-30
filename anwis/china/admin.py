@@ -1,29 +1,16 @@
 from django.contrib import admin
 from django.utils.safestring import mark_safe
 
-from utils.mixins import ImagePreviewMixin
+from utils.mixins import ImagePreviewMixin, PreviewColorMixin
 from .models import ChinaDistributor, Product, OrderForProject, Order, Status, IndividualEntrepreneur, ProductInfo, \
     Category
 
 
 @admin.register(Status)
-class StatusAdmin(ImagePreviewMixin, admin.ModelAdmin):
+class StatusAdmin(PreviewColorMixin, ImagePreviewMixin, admin.ModelAdmin):
     list_display = ['id', 'status', 'preview_color', 'preview_image']
     list_display_links = ['id']
     search_fields = ['id', 'status']
-
-    def preview_color(self, obj):
-        if obj:
-            return mark_safe(
-                f'<div style="display: flex; align-items:center;">'
-                f'<div style="background-color: {obj.color}; width: 50px; height: 50px; border-radius: 50%;"></div>'
-                f'<div style="margin-left:10px; background-color: {obj.hover_color}; width: 50px; height: 50px; '
-                f'border-radius: 50%;">'
-                f'</div>'
-                '</div>'
-            )
-
-    preview_color.short_description = 'Превью цвета'
 
 
 @admin.register(ChinaDistributor)
