@@ -19,3 +19,20 @@ class PhotoSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ('id', 'title', 'photo')
         model = Photo
+
+
+class DocumentMixin:
+    documents = serializers.SerializerMethodField()
+    request = None
+
+    def get_documents(self, obj):
+        # request = self.context.get('request')
+
+        if obj.documents:
+            return [
+                {
+                    "id": document.id,
+                    "title": document.document.name,
+                    "path": self.request.build_absolute_uri(document.document.url),
+                } for document in obj.documents.all()
+            ]
