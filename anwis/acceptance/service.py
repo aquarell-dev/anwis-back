@@ -10,8 +10,9 @@ from rest_framework.exceptions import ValidationError
 from django.db import models, IntegrityError
 from rest_framework.response import Response
 
-from acceptance.models import Acceptance, Product, ProductSpecification, AcceptanceCategory, Box
-from acceptance.serializers import ProductSerializer, ProductSpecificationDetailedSerializer
+from acceptance.models import Acceptance, Product, ProductSpecification, AcceptanceCategory, Box, Reason
+from acceptance.serializers import ProductSerializer, ProductSpecificationDetailedSerializer, \
+    ProductSpecificationSerializer
 from china.models import Order, ProductInfo
 
 from blabel import LabelWriter
@@ -121,7 +122,7 @@ def create_acceptance_from_order(order: Order):
     four_digit_id = '0' * (4 - len(str(order.id))) + str(order.id)
 
     acceptance = Acceptance.objects.create(
-        title=f'Приемка {four_digit_id}',
+        title=f'Приемка №{four_digit_id}',
         cargo_number=order.cargo_number,
         cargo_volume=order.cargo_volume,
         cargo_weight=order.cargo_weight,
@@ -319,7 +320,13 @@ def update_photos_from_wb(articles: list = None):
 
         photo.photo.save(os.path.basename(img_temp.name), File(img_temp), save=True)
 
-        Product.objects.filter(article=article).update(photo=photo)
+        products_to_be_updated = Product.objects.filter(article=article)
+
+        for product in products_to_be_updated:
+            if product.photo:
+                product.photo.delete()
+
+        products_to_be_updated.update(photo=photo)
 
 
 def _patch_boxes(boxes: list, instance: ProductSpecification):
@@ -360,23 +367,44 @@ def _patch_boxes(boxes: list, instance: ProductSpecification):
 
 
 def update_specification(instance: ProductSpecification, data: dict):
-    actual_quantity = data.pop('actual_quantity', None)
     boxes = data.pop('boxes', None)
-
-    if actual_quantity:
-        instance.actual_quantity = actual_quantity
+    reasons = data.pop('reasons', None)
 
     if boxes:
         _patch_boxes(boxes, instance)
 
-    instance.save()
+    if reasons and isinstance(reasons, list):
+        for reason in reasons:
+            reason_id = reason.pop('id', None)
+
+            if reason_id:
+                continue
+
+            Reason.objects.filter(id=int(reason_id)).update(**reason)
+
+    ProductSpecification.objects.filter(id=instance.id).update(**data)
 
     return instance
 
 
-def box_contents(box_number: str):
-    specification = get_object_or_404(ProductSpecification.objects.all(), boxes__box__iexact=str(box_number))
+def _get_specification(context, **kwargs):
+    instance = get_object_or_404(
+        ProductSpecification.objects.all(),
+        **kwargs
+    )
 
-    instance = ProductSpecification.objects.get(id=specification.id)
+    return Response(
+        ProductSpecificationDetailedSerializer(instance=instance, context=context).data
+    )
 
-    return instance.id
+
+def get_specification_by_box(context, box_number: str, acceptance: int):
+    return _get_specification(
+        context,
+        boxes__box__iexact=str(box_number),
+        acceptance__in=[acceptance]
+    )
+
+
+def get_specification_by_barcode(context, barcode: str, acceptance: int):
+    return _get_specification(context, product__barcode__iexact=str(barcode), acceptance__in=[acceptance])
