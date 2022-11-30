@@ -25,3 +25,15 @@ def save_to_default_storage(file):
     f = default_storage.save(file.name, file)
 
     return default_storage.url(f)
+
+
+def check_required_keys(dictionary: dict, required_keys: list) -> list:
+    missing_keys = []
+
+    for key in required_keys:
+        try:
+            dictionary[key]
+        except KeyError:
+            missing_keys.append(key)
+
+    return missing_keys
