@@ -5,14 +5,18 @@ from rest_framework.response import Response
 from rest_framework.serializers import ModelSerializer
 from rest_framework.views import APIView
 
-from acceptance.models import Acceptance, StaffMember, Product, AcceptanceCategory, ProductSpecification, Box
+from acceptance.models import Acceptance, StaffMember, Product, AcceptanceCategory, ProductSpecification, Box, Reason, \
+    AcceptanceStatus
 from acceptance.serializers import AcceptanceListSerializer, AcceptanceCreateSerializer, StaffMemberSerializer, \
     ProductSerializer, CategorySerializer, ProductCreateSerializer, AcceptanceDetailedUpdateSerializer, \
-    ProductSpecificationSerializer, BoxSerializer
+    ProductSpecificationSerializer, BoxSerializer, FindSpecificationByBoxSerializer, \
+    ProductSpecificationDetailedSerializer, ReasonSerializer, AcceptanceStatusSerializer
 from acceptance.service import create_acceptance_from_order, update_acceptance_from_order, create_label, \
     update_leftovers, update_colors, update_multiple_categories, create_multiple_products, update_photos_from_wb, \
-    update_specification, box_contents
+    update_specification, get_specification_by_box, get_specification_by_barcode
 from china.models import Order
+from common.services import check_required_keys
+from utils.mixins import ListModelMixin
 
 
 class AcceptanceListCreateView(generics.ListCreateAPIView):
@@ -22,6 +26,9 @@ class AcceptanceListCreateView(generics.ListCreateAPIView):
         if self.request.method == 'POST':
             return AcceptanceCreateSerializer
         return AcceptanceListSerializer
+
+    def get_serializer(self, *args, **kwargs):
+        return super().get_serializer(*args, **kwargs)
 
 
 class AcceptanceRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
@@ -72,17 +79,39 @@ class AcceptanceDetailedUpdate(generics.UpdateAPIView):
         return self.partial_update(request, *args, **kwargs)
 
 
+class CreateMultipleSpecificationsView(APIView):
+    def post(self, request):
+        acceptance: Acceptance = get_object_or_404(Acceptance.objects.all(), id=request.data.pop('id', None))
+
+        products = request.data.pop('products', None)
+
+        if not products:
+            return Response({'status': 'error', 'message': 'provide product ids'}, status=400)
+
+        for product in products:
+            acceptance.specifications.create(
+                cost=0,
+                quantity=0,
+                product_id=int(product)
+            )
+
+        return Response({'status': 'ok'}, status=200)
+
+
+class StatusListView(generics.ListAPIView):
+    queryset = AcceptanceStatus.objects.all()
+    serializer_class = AcceptanceStatusSerializer
+
+
 class ProductSpecificationPartialUpdateView(generics.UpdateAPIView):
     queryset = ProductSpecification.objects.all()
     serializer_class = ProductSpecificationSerializer
 
     def put(self, request, *args, **kwargs):
         instance = update_specification(self.get_object(), request.data)
+        instance.save()
         serializer = ProductSpecificationSerializer(instance)
         return Response(serializer.data)
-
-    # def put(self, request, *args, **kwargs):
-    #     return self.partial_update(request, *args, **kwargs)
 
 
 class ProductSpecificationPartialMultipleUpdateView(APIView):
@@ -90,7 +119,7 @@ class ProductSpecificationPartialMultipleUpdateView(APIView):
         specifications = request.data.pop('specifications', None)
 
         if not specifications:
-            return Response({'error': 'provise specs'}, status=400)
+            return Response({'error': 'provide specs'}, status=400)
 
         response = []
 
@@ -263,13 +292,48 @@ class AddBoxToSpecification(generics.UpdateAPIView):
         return Response(serializer.data)
 
 
+class AddReasonToSpecification(generics.UpdateAPIView):
+    queryset = ProductSpecification.objects.all()
+    serializer_class = ProductSpecificationSerializer
+
+    def put(self, request, *args, **kwargs):
+        instance: ProductSpecification = self.get_object()
+        instance.reasons.create(
+            reason='',
+            quantity=0
+        )
+        serializer = ProductSpecificationSerializer(instance)
+        return Response(serializer.data)
+
+
 class RetrieveDeleteBoxView(generics.RetrieveDestroyAPIView):
     queryset = Box.objects.all()
     serializer_class = BoxSerializer
 
 
-class GetProductByBoxNumber(generics.RetrieveAPIView):
-    lookup_field = 'box'
+class RetrieveDeleteReasonView(generics.RetrieveDestroyAPIView):
+    queryset = Reason.objects.all()
+    serializer_class = ReasonSerializer
 
-    queryset = Box.objects.all()
-    serializer_class = BoxSerializer
+
+class FindSpecificationByBox(APIView):
+    def post(self, request: Request):
+        missing = check_required_keys(request.data, ['acceptance', 'box_number'])
+
+        if missing:
+            return Response({'status': 'error', 'found missing properties': ', '.join(missing)}, status=400)
+
+        context = {'request': request, 'format': self.format_kwarg, 'view': self}
+
+        return get_specification_by_box(context, **request.data)
+
+
+class FindSpecificationByBarcode(generics.RetrieveAPIView):
+    def post(self, request: Request):
+        missing = check_required_keys(request.data, ['acceptance', 'barcode'])
+
+        if missing:
+            return Response({'status': 'error', 'found missing properties': ', '.join(missing)}, status=400)
+
+        context = {'request': request, 'format': self.format_kwarg, 'view': self}
+        return get_specification_by_barcode(context, **request.data)
