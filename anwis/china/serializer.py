@@ -1,7 +1,9 @@
 from drf_writable_nested import WritableNestedModelSerializer
 from rest_framework import serializers
 
+from acceptance.models import AcceptanceStatus
 from common.serializers import TaskSerializer
+from documents.serializers import DocumentMixin
 from .models import ChinaDistributor, Product, OrderForProject, Order, Status, IndividualEntrepreneur, ProductInfo,\
     Category, Task
 
@@ -85,7 +87,7 @@ class OrderListRetrieveSerializer(serializers.ModelSerializer):
     documents = serializers.SerializerMethodField()
     acceptance = serializers.SlugRelatedField(slug_field='id', read_only=True)
 
-    def get_documents(self, obj: Order):
+    def get_documents(self, obj):
         request = self.context.get('request')
 
         if obj.documents:
