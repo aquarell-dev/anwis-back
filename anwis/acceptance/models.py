@@ -6,33 +6,6 @@ from common.models import CommonProduct, CommonCategory, Task
 from documents.models import Photo, Document
 
 
-class StaffMember(models.Model):
-    username = models.CharField('Юзер', max_length=264, unique=True)
-    password = models.CharField('Пароль', max_length=264)
-    inactive = models.BooleanField('Деактивирован', default=False)
-    temporary = models.BooleanField('Временный', default=False)
-    unique_number = models.CharField('Уникальный Номер', unique=True, max_length=64, null=True, blank=True)
-
-    def __str__(self):
-        return self.username
-
-    class Meta:
-        verbose_name = 'Сотрудник'
-        verbose_name_plural = 'Сотрудники'
-
-
-class Box(models.Model):
-    box = models.CharField('Номер Коробки', max_length=24)
-    quantity = models.PositiveIntegerField('Кол-во товаров в коробке')
-
-    def __str__(self):
-        return self.box
-
-    class Meta:
-        verbose_name = 'Коробка'
-        verbose_name_plural = 'Коробки'
-
-
 class AcceptanceCategory(CommonCategory):
     payment_options = (
         ('hourly', 'Почасовая'),
@@ -88,7 +61,7 @@ class ProductSpecification(models.Model):
     actual_quantity = models.PositiveSmallIntegerField('Фактическое Количество Товаров', blank=True, null=True)
     product = models.ForeignKey(Product, verbose_name='Товар', on_delete=models.CASCADE)
     cost = models.FloatField('Себестоимость', blank=True, null=True)
-    boxes = models.ManyToManyField(Box, verbose_name='Коробки', blank=True)
+    boxes = models.ManyToManyField('Box', verbose_name='Коробки', blank=True)
     reasons = models.ManyToManyField(Reason, verbose_name='Причины', blank=True)
 
     def __str__(self):
@@ -109,6 +82,35 @@ class AcceptanceStatus(models.Model):
     class Meta:
         verbose_name = 'Статус'
         verbose_name_plural = 'Статусы'
+
+
+class Box(models.Model):
+    box = models.CharField('Номер Коробки', max_length=24)
+    quantity = models.PositiveIntegerField('Кол-во товаров в коробке')
+    product = models.ForeignKey(Product, verbose_name='Товар', on_delete=models.SET_NULL, blank=True, null=True)
+
+    def __str__(self):
+        return self.box
+
+    class Meta:
+        verbose_name = 'Коробка'
+        verbose_name_plural = 'Коробки'
+
+
+class StaffMember(models.Model):
+    username = models.CharField('Юзер', max_length=264, unique=True)
+    password = models.CharField('Пароль', max_length=264)
+    inactive = models.BooleanField('Деактивирован', default=False)
+    temporary = models.BooleanField('Временный', default=False)
+    unique_number = models.CharField('Уникальный Номер', unique=True, max_length=64, null=True, blank=True)
+    box = models.ForeignKey(Box, verbose_name='Коробка', on_delete=models.SET_NULL, blank=True, null=True)
+
+    def __str__(self):
+        return self.username
+
+    class Meta:
+        verbose_name = 'Сотрудник'
+        verbose_name_plural = 'Сотрудники'
 
 
 class Acceptance(models.Model):

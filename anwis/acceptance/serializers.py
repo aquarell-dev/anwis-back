@@ -70,6 +70,9 @@ class ReasonSerializer(serializers.ModelSerializer):
 
 
 class BoxSerializer(serializers.ModelSerializer):
+    worker = StaffMemberSerializer(read_only=True)
+    product = ProductSerializer(read_only=True)
+
     class Meta:
         model = Box
         fields = "__all__"
@@ -78,9 +81,6 @@ class BoxSerializer(serializers.ModelSerializer):
 class ProductSpecificationSerializer(WritableNestedModelSerializer, serializers.ModelSerializer):
     boxes = BoxSerializer(many=True)
     reasons = ReasonSerializer(many=True)
-
-    # def update(self, instance: ProductSpecification, validated_data: dict):
-    #     return update_specification(instance, validated_data)
 
     class Meta:
         fields = '__all__'
