@@ -13,7 +13,7 @@ SECRET_KEY = 'django-insecure-9jac1sp!=he74jeb68%%@3!do=sp1d7)u3(3!_#9fav9=d^#9u
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', 'anwis-sklad.onrender.com']  # DEBUG only
+ALLOWED_HOSTS = ['*']  # DEBUG only
 
 INSTALLED_APPS = [
     'django.contrib.admin',
