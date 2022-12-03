@@ -2,7 +2,12 @@ import os
 from pathlib import Path
 from datetime import timedelta
 
+import environ
+
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+env = environ.Env()
+environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
 SECRET_KEY = 'django-insecure-9jac1sp!=he74jeb68%%@3!do=sp1d7)u3(3!_#9fav9=d^#9u'
 
@@ -116,11 +121,11 @@ WSGI_APPLICATION = 'anwis.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'd9hghugrg7tte4',
-        'HOST': 'ec2-52-31-77-218.eu-west-1.compute.amazonaws.com',
-        'PORT': '5432',
-        'USER': 'qnoycgiakovnnq',
-        'PASSWORD': 'f292b8685b851d93ad677b80c79140394dda83a2148db099458050472cf3dadf',
+        'NAME': env('DB_NAME'),
+        'HOST': env('DB_HOST'),
+        'PORT': env('DB_PORT'),
+        'USER': env('DB_USERNAME'),
+        'PASSWORD': env('DB_PASSWORD')
     }
 }
 
