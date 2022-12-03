@@ -27,7 +27,7 @@ def save_to_default_storage(file):
     return default_storage.url(f)
 
 
-def check_required_keys(dictionary: dict, required_keys: list) -> list:
+def check_required_keys(dictionary: dict, *required_keys) -> list:
     missing_keys = []
 
     for key in required_keys:
