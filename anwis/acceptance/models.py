@@ -11,6 +11,7 @@ class StaffMember(models.Model):
     password = models.CharField('Пароль', max_length=264)
     inactive = models.BooleanField('Деактивирован', default=False)
     temporary = models.BooleanField('Временный', default=False)
+    unique_number = models.CharField('Уникальный Номер', unique=True, max_length=64, null=True, blank=True)
 
     def __str__(self):
         return self.username
@@ -21,7 +22,7 @@ class StaffMember(models.Model):
 
 
 class Box(models.Model):
-    box = models.CharField('Номер Коробки', max_length=24, unique=True)
+    box = models.CharField('Номер Коробки', max_length=24)
     quantity = models.PositiveIntegerField('Кол-во товаров в коробке')
 
     def __str__(self):
@@ -33,6 +34,15 @@ class Box(models.Model):
 
 
 class AcceptanceCategory(CommonCategory):
+    payment_options = (
+        ('hourly', 'Почасовая'),
+        ('apiece', 'Поштучно')
+    )
+
+    payment = models.CharField('Оплата', choices=payment_options, max_length=64, blank=True, null=True)
+    per_hour = models.FloatField('За час', blank=True, null=True)
+    per_piece = models.FloatField('За штуку', blank=True, null=True)
+
     def __str__(self):
         return str(self.id)
 

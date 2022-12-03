@@ -299,6 +299,8 @@ def _get_photo_response(urls: list) -> requests.Response:
 def update_photos_from_wb(articles: list = None):
     if not articles:
         articles = [product.article for product in Product.objects.all() if _is_article_russian(str(product.article))]
+    else:
+        articles = [article for article in articles if _is_article_russian(str(article))]
 
     articles = list(set(list(map(str, articles))))
 
@@ -323,24 +325,45 @@ def update_photos_from_wb(articles: list = None):
         products_to_be_updated = Product.objects.filter(article=article)
 
         for product in products_to_be_updated:
-            if product.photo:
-                product.photo.delete()
+            try:
+                if product.photo:
+                    product.photo.delete()
+            except Photo.DoesNotExist:
+                continue
 
         products_to_be_updated.update(photo=photo)
+
+
+def _all_acceptances_finished(box_number: str):
+    # Есть ли приемки, в которых есть эта коробка, при том, что это приемка еще не завершена
+    return not bool(
+        Box.objects.filter(
+            box=box_number,
+            productspecification__acceptance__status__in=['Новая Приемка', 'Упаковывается', 'Упаковано']
+        )
+    )
 
 
 def _patch_boxes(boxes: list, instance: ProductSpecification):
     for box in boxes:
         box_id = box.pop('id', None)
 
-        if not box_id:
-            try:
-                instance.boxes.create(**box)
-            except ValidationError:
-                raise serializers.ValidationError(
-                    {'status': 'error', 'message': 'Коробка с таким номером уже существует'})
+        acceptances_finished = _all_acceptances_finished(str(box['box']))
 
-            return
+        if not box_id:
+            if acceptances_finished:
+                try:
+                    instance.boxes.create(**box)
+                except ValidationError:
+                    raise serializers.ValidationError(
+                        {'status': 'error', 'message': 'Коробка с таким номером уже существует'}
+                    )
+
+                return
+            else:
+                raise serializers.ValidationError(
+                    {'status': 'error', 'message': 'Прошлая приемка не закончена'}
+                )
 
         existing_box = _does_entity_exist(Box, id=box_id)
 
@@ -354,11 +377,16 @@ def _patch_boxes(boxes: list, instance: ProductSpecification):
         existing_box.box = box['box']
         existing_box.quantity = box['quantity']
 
-        try:
-            existing_box.save()
-        except IntegrityError:
+        if acceptances_finished:
+            try:
+                existing_box.save()
+            except IntegrityError:
+                raise serializers.ValidationError(
+                    {'status': 'error', 'message': 'Коробка с таким номером уже существует'})
+        else:
             raise serializers.ValidationError(
-                {'status': 'error', 'message': 'Коробка с таким номером уже существует'})
+                {'status': 'error', 'message': 'Прошлая приемка не закончена'}
+            )
 
         instance.boxes.add(existing_box.id)
 
@@ -390,6 +418,7 @@ def update_specification(instance: ProductSpecification, data: dict):
 def _get_specification(context, **kwargs):
     instance = get_object_or_404(
         ProductSpecification.objects.all(),
+        acceptance__status__status__in=['Новая Приемка', 'Упаковано', 'Упаковывается'],
         **kwargs
     )
 
@@ -398,13 +427,12 @@ def _get_specification(context, **kwargs):
     )
 
 
-def get_specification_by_box(context, box_number: str, acceptance: int):
+def get_specification_by_box(context, box_number: str):
     return _get_specification(
         context,
-        boxes__box__iexact=str(box_number),
-        acceptance__in=[acceptance]
+        boxes__box__iexact=str(box_number)
     )
 
 
-def get_specification_by_barcode(context, barcode: str, acceptance: int):
-    return _get_specification(context, product__barcode__iexact=str(barcode), acceptance__in=[acceptance])
+def get_specification_by_barcode(context, barcode: str):
+    return _get_specification(context, product__barcode__iexact=str(barcode))

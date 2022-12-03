@@ -1,3 +1,5 @@
+import random
+
 from drf_writable_nested import WritableNestedModelSerializer
 from rest_framework import serializers
 
@@ -12,6 +14,19 @@ class StaffMemberSerializer(serializers.ModelSerializer):
     class Meta:
         fields = '__all__'
         model = StaffMember
+
+
+class StaffMemberCreateSerializer(StaffMemberSerializer):
+    def create(self, validated_data):
+        unique_number = validated_data.pop('unique_number', None)
+
+        return StaffMember.objects.create(
+            **validated_data,
+            unique_number=unique_number if unique_number else str(random.randint(1, 9999))
+        )
+
+    class Meta(StaffMemberSerializer.Meta):
+        pass
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -32,7 +47,7 @@ class ProductSerializer(serializers.ModelSerializer):
             return request.build_absolute_uri(obj.photo.photo.url)
 
     def get_photo_id(self, obj: Product):
-        if obj.photo.photo:
+        if obj.photo:
             return obj.photo.id
 
     class Meta:
@@ -107,6 +122,14 @@ class AcceptanceStatusSerializer(serializers.ModelSerializer):
 
 
 class AcceptanceListSerializer(serializers.ModelSerializer):
+    specifications = ProductSpecificationDetailedSerializer(many=True, read_only=True)
+
+    class Meta:
+        fields = ['id', 'title', 'specifications', 'created_at', 'from_order']
+        model = Acceptance
+
+
+class AcceptanceRetrieveSerializer(serializers.ModelSerializer):
     specifications = ProductSpecificationDetailedSerializer(many=True, read_only=True)
     individual = serializers.SerializerMethodField(read_only=True)
     project = serializers.SerializerMethodField(read_only=True)

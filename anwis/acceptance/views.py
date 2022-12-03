@@ -2,21 +2,20 @@ from django.shortcuts import get_object_or_404
 from rest_framework import generics
 from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework.serializers import ModelSerializer
 from rest_framework.views import APIView
 
 from acceptance.models import Acceptance, StaffMember, Product, AcceptanceCategory, ProductSpecification, Box, Reason, \
     AcceptanceStatus
-from acceptance.serializers import AcceptanceListSerializer, AcceptanceCreateSerializer, StaffMemberSerializer, \
+from acceptance.serializers import AcceptanceRetrieveSerializer, AcceptanceCreateSerializer, StaffMemberSerializer, \
     ProductSerializer, CategorySerializer, ProductCreateSerializer, AcceptanceDetailedUpdateSerializer, \
-    ProductSpecificationSerializer, BoxSerializer, FindSpecificationByBoxSerializer, \
-    ProductSpecificationDetailedSerializer, ReasonSerializer, AcceptanceStatusSerializer
+    ProductSpecificationSerializer, BoxSerializer, ReasonSerializer, AcceptanceStatusSerializer, \
+    StaffMemberCreateSerializer, \
+    AcceptanceListSerializer
 from acceptance.service import create_acceptance_from_order, update_acceptance_from_order, create_label, \
     update_leftovers, update_colors, update_multiple_categories, create_multiple_products, update_photos_from_wb, \
     update_specification, get_specification_by_box, get_specification_by_barcode
 from china.models import Order
 from common.services import check_required_keys
-from utils.mixins import ListModelMixin
 
 
 class AcceptanceListCreateView(generics.ListCreateAPIView):
@@ -33,7 +32,7 @@ class AcceptanceListCreateView(generics.ListCreateAPIView):
 
 class AcceptanceRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Acceptance.objects.all()
-    serializer_class = AcceptanceListSerializer
+    serializer_class = AcceptanceRetrieveSerializer
 
 
 class AcceptanceCreateFromOrder(APIView):
@@ -142,13 +141,22 @@ class ProductSpecificationPartialMultipleUpdateView(APIView):
 
 
 class StaffMemberListCreateView(generics.ListCreateAPIView):
-    queryset = StaffMember.objects.all()
-    serializer_class = StaffMemberSerializer
+    queryset = StaffMember.objects.all().order_by('unique_number')
+
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return StaffMemberCreateSerializer
+        return StaffMemberSerializer
 
 
 class StaffMemberRetrieveDestroyRetrieveView(generics.RetrieveUpdateDestroyAPIView):
+    lookup_field = 'unique_number'
+
     queryset = StaffMember.objects.all()
     serializer_class = StaffMemberSerializer
+
+    def patch(self, request, *args, **kwargs):
+        return self.partial_update(request, *args, **kwargs)
 
 
 class ProductListCreateView(generics.ListCreateAPIView):
@@ -318,7 +326,7 @@ class RetrieveDeleteReasonView(generics.RetrieveDestroyAPIView):
 
 class FindSpecificationByBox(APIView):
     def post(self, request: Request):
-        missing = check_required_keys(request.data, ['acceptance', 'box_number'])
+        missing = check_required_keys(request.data, 'box_number')
 
         if missing:
             return Response({'status': 'error', 'found missing properties': ', '.join(missing)}, status=400)
@@ -330,7 +338,7 @@ class FindSpecificationByBox(APIView):
 
 class FindSpecificationByBarcode(generics.RetrieveAPIView):
     def post(self, request: Request):
-        missing = check_required_keys(request.data, ['acceptance', 'barcode'])
+        missing = check_required_keys(request.data, 'barcode')
 
         if missing:
             return Response({'status': 'error', 'found missing properties': ', '.join(missing)}, status=400)

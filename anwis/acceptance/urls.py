@@ -17,8 +17,8 @@ urlpatterns = [
     path('acceptances/update/from-order/', AcceptanceUpdateFromOrder.as_view()),
     path('acceptance/update/<int:pk>/', AcceptanceDetailedUpdate.as_view()),
 
-    path('members/', StaffMemberListCreateView.as_view()),
-    path('members/<int:pk>/', StaffMemberRetrieveDestroyRetrieveView.as_view()),
+    path('acceptance/members/', StaffMemberListCreateView.as_view()),
+    path('acceptance/members/<str:unique_number>/', StaffMemberRetrieveDestroyRetrieveView.as_view()),
 
     path('acceptance/products/', ProductListCreateView.as_view()),
     path('acceptance/products/<int:pk>/', ProductRetrieveDestroyUpdateView.as_view()),
