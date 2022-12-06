@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from acceptance.models import Acceptance, StaffMember, Product, AcceptanceCategory, Box, AcceptanceStatus
+from acceptance.models import Acceptance, StaffMember, Product, AcceptanceCategory, Box, AcceptanceStatus, Session
 from utils.mixins import PreviewColorMixin
 
 
@@ -32,7 +32,7 @@ class AcceptanceCategoryAdmin(admin.ModelAdmin):
 class BoxAdmin(admin.ModelAdmin):
     list_display = [
         field.name for field in Box._meta.get_fields()
-        if field.name not in ['productspecification']
+        if field.name not in ['productspecification', 'staffmember']
     ]
     list_display_links = ['id']
 
@@ -46,4 +46,10 @@ class ProductAdmin(admin.ModelAdmin):
 @admin.register(AcceptanceStatus)
 class StatusAdmin(PreviewColorMixin, admin.ModelAdmin):
     list_display = ['id', 'status', 'color', 'preview_color']
+    list_display_links = ['id']
+
+
+@admin.register(Session)
+class SessionAdmin(admin.ModelAdmin):
+    list_display = ['id', 'start', 'end', 'quantity']
     list_display_links = ['id']

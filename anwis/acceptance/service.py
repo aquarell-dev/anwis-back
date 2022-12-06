@@ -1,26 +1,21 @@
 import os
 from datetime import datetime
-from typing import List, Type
-from django.core.files.temp import NamedTemporaryFile
+from typing import List, Type, Union
 
 import requests
+from blabel import LabelWriter
+from django.core.files import File
+from django.core.files.temp import NamedTemporaryFile
+from django.db import models
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
-from django.db import models, IntegrityError
+from rest_framework.request import Request
 from rest_framework.response import Response
 
 from acceptance.models import Acceptance, Product, ProductSpecification, AcceptanceCategory, Box, Reason
-from acceptance.serializers import ProductSerializer, ProductSpecificationDetailedSerializer, \
-    ProductSpecificationSerializer
+from acceptance.serializers import ProductSpecificationDetailedSerializer
 from china.models import Order, ProductInfo
-
-from blabel import LabelWriter
-
-from common.services import fetch_leftovers, save_to_default_storage
-
-from django.core.files import File
-
+from common.services import fetch_leftovers
 from documents.models import Document, Photo
 
 
@@ -334,64 +329,70 @@ def update_photos_from_wb(articles: list = None):
         products_to_be_updated.update(photo=photo)
 
 
-def _all_acceptances_finished(box_number: str):
+def _all_acceptances_w_this_box_finished(box_number: str):
     # Есть ли приемки, в которых есть эта коробка, при том, что это приемка еще не завершена
-    return not bool(
-        Box.objects.filter(
+    return len(Box.objects.filter(
             box=box_number,
-            productspecification__acceptance__status__in=['Новая Приемка', 'Упаковывается', 'Упаковано']
-        )
-    )
+            archive=False
+        )) < 1
 
 
-def _patch_boxes(boxes: list, instance: ProductSpecification):
+def _box_in_this_specification_and_is_not_to_be_changed(specification: ProductSpecification, box: str, quantity: int):
+    """
+    Если коробка существует и она не собирается меняться, то мы просто пропускаем итерацию в цикле,
+    чтоб не вылетала ошибка, что такая коробка с активной приемкой уже существует.
+    :param specification:
+    :param box:
+    :param quantity:
+    :return:
+    """
+    # Box.objects.filter()
+    _box: Union[Box, None] = _does_entity_exist(Box, specification_id=specification.id, box=box)
+
+    if not _box:
+        return False
+
+    print(box, _box.quantity, quantity, _box.quantity == quantity)
+
+    return _box.quantity != quantity
+
+
+def _patch_boxes(boxes: list, specification: ProductSpecification):
     for box in boxes:
         box_id = box.pop('id', None)
+        box_number = str(box.pop('box', None))
+        quantity = int(box.pop('quantity', None))
 
-        acceptances_finished = _all_acceptances_finished(str(box['box']))
+        acceptances_finished = _all_acceptances_w_this_box_finished(box_number)
 
-        if not box_id:
-            if acceptances_finished:
-                try:
-                    instance.boxes.create(**box)
-                except ValidationError:
-                    raise serializers.ValidationError(
-                        {'status': 'error', 'message': 'Коробка с таким номером уже существует'}
-                    )
-
-                return
-            else:
+        if not _box_in_this_specification_and_is_not_to_be_changed(specification, box_number, quantity):
+            if not acceptances_finished:
                 raise serializers.ValidationError(
-                    {'status': 'error', 'message': 'Прошлая приемка не закончена'}
+                    {'status': 'error', 'message': f'Есть активная приемка с этой коробкой{box_number, box_id}'}
                 )
 
-        existing_box = _does_entity_exist(Box, id=box_id)
+        _box = _does_entity_exist(Box, id=int(box_id))
 
-        if not existing_box:
-            try:
-                instance.boxes.create(**box)
-            except ValidationError:
-                raise serializers.ValidationError(
-                    {'status': 'error', 'message': 'Коробка с таким номером уже существует'})
+        if not _box:
+            continue
 
-        existing_box.box = box['box']
-        existing_box.quantity = box['quantity']
+        _box.box = box_number
+        _box.quantity = quantity
 
-        if acceptances_finished:
-            try:
-                existing_box.save()
-            except IntegrityError:
-                raise serializers.ValidationError(
-                    {'status': 'error', 'message': 'Коробка с таким номером уже существует'})
-        else:
-            raise serializers.ValidationError(
-                {'status': 'error', 'message': 'Прошлая приемка не закончена'}
-            )
+        _box.save()
 
-        instance.boxes.add(existing_box.id)
 
-    box_numbers = [box['box'] for box in boxes]
-    instance.boxes.all().exclude(box__in=box_numbers).delete()
+def _patch_reasons(reasons: list):
+    if not isinstance(reasons, list):
+        return
+
+    for reason in reasons:
+        reason_id = reason.pop('id', None)
+
+        if reason_id:
+            continue
+
+        Reason.objects.filter(id=int(reason_id)).update(**reason)
 
 
 def update_specification(instance: ProductSpecification, data: dict):
@@ -401,18 +402,38 @@ def update_specification(instance: ProductSpecification, data: dict):
     if boxes:
         _patch_boxes(boxes, instance)
 
-    if reasons and isinstance(reasons, list):
-        for reason in reasons:
-            reason_id = reason.pop('id', None)
-
-            if reason_id:
-                continue
-
-            Reason.objects.filter(id=int(reason_id)).update(**reason)
+    if reasons:
+        _patch_reasons(reasons)
 
     ProductSpecification.objects.filter(id=instance.id).update(**data)
 
     return instance
+
+
+def update_multiple_specifications(request: Request):
+    specifications = request.data.pop('specifications', None)
+
+    if not specifications:
+        return Response({'error': 'provide specs'}, status=400)
+
+    response = []
+
+    for specification in specifications:
+        id = specification.pop('id', None)
+
+        if not id:
+            continue
+
+        try:
+            specification_instance = ProductSpecification.objects.get(id=int(id))
+        except ProductSpecification.DoesNotExist:
+            continue
+
+        update_specification(specification_instance, specification)
+
+        response.append({'id': specification_instance.id, 'status': 'updated'})
+
+    return response
 
 
 def _get_specification(context, **kwargs):

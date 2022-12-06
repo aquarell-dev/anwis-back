@@ -4,13 +4,30 @@ from drf_writable_nested import WritableNestedModelSerializer
 from rest_framework import serializers
 
 from acceptance.models import Acceptance, StaffMember, AcceptanceCategory, Product, ProductSpecification, Box, Reason, \
-    AcceptanceStatus
-import acceptance.service
+    AcceptanceStatus, Session
 from china.models import Order
 from common.serializers import TaskSerializer
 
 
-class StaffMemberSerializer(serializers.ModelSerializer):
+# ***********************************************************************
+# Session
+# ***********************************************************************
+
+
+class SessionSerializer(serializers.ModelSerializer):
+    class Meta:
+        fields = '__all__'
+        model = Session
+
+
+# ***********************************************************************
+# Staff
+# ***********************************************************************
+
+
+class StaffMemberSerializer(WritableNestedModelSerializer, serializers.ModelSerializer):
+    session = SessionSerializer()
+
     class Meta:
         fields = '__all__'
         model = StaffMember
@@ -29,14 +46,24 @@ class StaffMemberCreateSerializer(StaffMemberSerializer):
         pass
 
 
+# ***********************************************************************
+# Category
+# ***********************************************************************
+
+
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         fields = '__all__'
         model = AcceptanceCategory
 
 
+# ***********************************************************************
+# Product
+# ***********************************************************************
+
+
 class ProductSerializer(serializers.ModelSerializer):
-    category = serializers.SlugRelatedField(slug_field='category', read_only=True)
+    category = CategorySerializer(read_only=True)
     photo = serializers.SerializerMethodField()
     photo_id = serializers.SerializerMethodField(read_only=True)
 
@@ -53,8 +80,8 @@ class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = [
-            field.name for field in Product._meta.get_fields() if field.name not in ['productspecification']
-        ] + ['photo_id']
+                     field.name for field in Product._meta.get_fields() if field.name not in ['productspecification']
+                 ] + ['photo_id']
 
 
 class ProductCreateSerializer(serializers.ModelSerializer):
@@ -63,19 +90,31 @@ class ProductCreateSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+# ***********************************************************************
+# Reason
+# ***********************************************************************
+
+
 class ReasonSerializer(serializers.ModelSerializer):
     class Meta:
         model = Reason
         fields = '__all__'
 
 
-class BoxSerializer(serializers.ModelSerializer):
-    worker = StaffMemberSerializer(read_only=True)
-    product = ProductSerializer(read_only=True)
+# ***********************************************************************
+# Box
+# ***********************************************************************
 
+
+class BoxSerializer(serializers.ModelSerializer):
     class Meta:
         model = Box
         fields = "__all__"
+
+
+# ***********************************************************************
+# Specification
+# ***********************************************************************
 
 
 class ProductSpecificationSerializer(WritableNestedModelSerializer, serializers.ModelSerializer):
@@ -97,28 +136,41 @@ class ProductSpecificationDetailedSerializer(WritableNestedModelSerializer, seri
         model = ProductSpecification
 
 
-class FindSpecificationByBoxSerializer(serializers.ModelSerializer):
-    specification = serializers.SerializerMethodField()
+# ***********************************************************************
+# Detailed
+# ***********************************************************************
 
-    def to_representation(self, instance: Box):
-        ret = super().to_representation(instance)
-        return ret
 
-    def get_specification(self, box: Box):
-        return ProductSpecificationDetailedSerializer(
-            acceptance.service.get_specification_by_box(box.box),
-            context=self.context
-        ).data
+class BoxDetailedSerializer(serializers.ModelSerializer):
+    specification = ProductSpecificationDetailedSerializer(read_only=True)
 
     class Meta:
         model = Box
         fields = "__all__"
 
 
+class StaffMemberDetailedSerializer(serializers.ModelSerializer):
+    box = BoxDetailedSerializer(read_only=True)
+
+    class Meta:
+        model = StaffMember
+        fields = "__all__"
+
+
+# ***********************************************************************
+# Status
+# ***********************************************************************
+
+
 class AcceptanceStatusSerializer(serializers.ModelSerializer):
     class Meta:
         fields = '__all__'
         model = AcceptanceStatus
+
+
+# ***********************************************************************
+# Acceptance
+# ***********************************************************************
 
 
 class AcceptanceListSerializer(serializers.ModelSerializer):
@@ -173,9 +225,9 @@ class AcceptanceRetrieveSerializer(serializers.ModelSerializer):
     class Meta:
         model = Acceptance
         fields = [
-            field.name for field in Acceptance._meta.get_fields()
-            if field.name not in ['order']
-        ] + ['individual', 'project', 'documents']
+                     field.name for field in Acceptance._meta.get_fields()
+                     if field.name not in ['order']
+                 ] + ['individual', 'project', 'documents']
 
 
 class AcceptanceDetailedUpdateSerializer(WritableNestedModelSerializer, serializers.ModelSerializer):

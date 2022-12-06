@@ -5,10 +5,10 @@ from acceptance.views import AcceptanceListCreateView, AcceptanceRetrieveUpdateD
     CategoryDetailedView, CategoryView, ProductRetrieveDestroyUpdateView, GenerateLabelsView, \
     UpdateProductLeftoversView, CreateMultipleProducts, ParsePhotosView, AcceptanceDetailedUpdate, \
     UpdateProductColorsView, UpdateMultipleCategoriesView, DeleteMultipleProductsView, \
-    ProductSpecificationPartialUpdateView, AddBoxToSpecification, RetrieveDeleteBoxView, \
+    ProductSpecificationPartialUpdateView, AddBlankBoxToSpecification, RetrieveDeleteBoxView, \
     ProductSpecificationPartialMultipleUpdateView, DeleteMultipleSpecificationsView, FindSpecificationByBox, \
     FindSpecificationByBarcode, AddReasonToSpecification, RetrieveDeleteReasonView, CreateMultipleSpecificationsView, \
-    StatusListView
+    StatusListView, RetrieveBoxByBoxNumber
 
 urlpatterns = [
     path('acceptances/', AcceptanceListCreateView.as_view()),
@@ -29,12 +29,14 @@ urlpatterns = [
     path('acceptance/specification/create-multiple/', CreateMultipleSpecificationsView.as_view()),
     path('acceptance/specification/by-box/', FindSpecificationByBox.as_view()),
     path('acceptance/specification/by-barcode/', FindSpecificationByBarcode.as_view()),
-    path('acceptance/specification/<int:pk>/add-box/', AddBoxToSpecification.as_view()),
+    path('acceptance/specification/<int:pk>/add-box/', AddBlankBoxToSpecification.as_view()),
     path('acceptance/specification/<int:pk>/add-reason/', AddReasonToSpecification.as_view()),
 
     path('acceptance/statuses/', StatusListView.as_view()),
 
     path('acceptance/box/<int:pk>/', RetrieveDeleteBoxView.as_view()),
+    path('acceptance/box/detailed/<str:box>/', RetrieveBoxByBoxNumber.as_view()),
+
     path('acceptance/reason/<int:pk>/', RetrieveDeleteReasonView.as_view()),
 
     path('acceptance/categories/', CategoryView.as_view()),

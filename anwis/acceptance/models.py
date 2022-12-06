@@ -84,10 +84,30 @@ class AcceptanceStatus(models.Model):
         verbose_name_plural = 'Статусы'
 
 
+class Session(models.Model):
+    start = models.DateTimeField('Время Начала', default=datetime.now, blank=True)
+    end = models.DateTimeField('Время Конца', null=True, blank=True)
+    quantity = models.PositiveSmallIntegerField('Кол-во упакованных', default=0)
+
+    def __str__(self):
+        return f'{self.start} -> {self.end}'
+
+    class Meta:
+        verbose_name = 'Сессия'
+        verbose_name_plural = 'Сессии'
+
+
 class Box(models.Model):
     box = models.CharField('Номер Коробки', max_length=24)
     quantity = models.PositiveIntegerField('Кол-во товаров в коробке')
-    product = models.ForeignKey(Product, verbose_name='Товар', on_delete=models.SET_NULL, blank=True, null=True)
+    specification = models.ForeignKey(
+        ProductSpecification,
+        verbose_name='Информация О Товаре',
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True
+    )
+    archive = models.BooleanField('Архивная Коробка', default=False)
 
     def __str__(self):
         return self.box
@@ -104,6 +124,7 @@ class StaffMember(models.Model):
     temporary = models.BooleanField('Временный', default=False)
     unique_number = models.CharField('Уникальный Номер', unique=True, max_length=64, null=True, blank=True)
     box = models.ForeignKey(Box, verbose_name='Коробка', on_delete=models.SET_NULL, blank=True, null=True)
+    session = models.ForeignKey(Session, verbose_name='Сессия', on_delete=models.SET_NULL, blank=True, null=True)
 
     def __str__(self):
         return self.username
