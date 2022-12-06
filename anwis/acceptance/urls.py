@@ -8,7 +8,7 @@ from acceptance.views import AcceptanceListCreateView, AcceptanceRetrieveUpdateD
     ProductSpecificationPartialUpdateView, AddBlankBoxToSpecification, RetrieveDeleteBoxView, \
     ProductSpecificationPartialMultipleUpdateView, DeleteMultipleSpecificationsView, FindSpecificationByBox, \
     FindSpecificationByBarcode, AddReasonToSpecification, RetrieveDeleteReasonView, CreateMultipleSpecificationsView, \
-    StatusListView, RetrieveBoxByBoxNumber
+    StatusListView, RetrieveBoxByBoxNumber, ProductRetrieveByBarcodeView
 
 urlpatterns = [
     path('acceptances/', AcceptanceListCreateView.as_view()),
@@ -22,6 +22,7 @@ urlpatterns = [
 
     path('acceptance/products/', ProductListCreateView.as_view()),
     path('acceptance/products/<int:pk>/', ProductRetrieveDestroyUpdateView.as_view()),
+    path('acceptance/products/by-barcode/<str:barcode>/', ProductRetrieveByBarcodeView.as_view()),
 
     path('acceptance/specification/<int:pk>/', ProductSpecificationPartialUpdateView.as_view()),
     path('acceptance/specification/multiple/', ProductSpecificationPartialMultipleUpdateView.as_view()),

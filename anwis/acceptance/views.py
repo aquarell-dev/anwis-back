@@ -226,7 +226,15 @@ class StaffMemberRetrieveDestroyRetrieveView(generics.RetrieveUpdateDestroyAPIVi
 
 
 class ProductListCreateView(generics.ListCreateAPIView):
-    queryset = Product.objects.all()
+    def get_queryset(self):
+        queryset = Product.objects.all()
+
+        barcode = self.request.query_params.get('barcode')
+
+        if barcode is not None:
+            queryset = queryset.filter(barcode=barcode)
+
+        return queryset
 
     def get_serializer_class(self):
         if self.request.method == 'POST':
@@ -244,6 +252,13 @@ class ProductRetrieveDestroyUpdateView(generics.RetrieveUpdateDestroyAPIView):
 
     def put(self, request, *args, **kwargs):
         return self.partial_update(request, *args, **kwargs)
+
+
+class ProductRetrieveByBarcodeView(generics.RetrieveAPIView):
+    lookup_field = 'barcode'
+
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
 
 
 class DeleteMultipleProductsView(APIView):

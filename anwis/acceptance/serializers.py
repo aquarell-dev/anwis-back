@@ -39,7 +39,7 @@ class StaffMemberCreateSerializer(StaffMemberSerializer):
 
         return StaffMember.objects.create(
             **validated_data,
-            unique_number=unique_number if unique_number else str(random.randint(1, 9999))
+            unique_number=unique_number if unique_number else str(random.randint(1, 100))
         )
 
     class Meta(StaffMemberSerializer.Meta):
@@ -82,6 +82,19 @@ class ProductSerializer(serializers.ModelSerializer):
         fields = [
                      field.name for field in Product._meta.get_fields() if field.name not in ['productspecification']
                  ] + ['photo_id']
+
+
+class ProductBarcodeSerializer(ProductSerializer):
+    def to_representation(self, instance):
+        if len(instance) == 0:
+            print('len 0')
+        else:
+            print(len(instance))
+        ret = super().to_representation(instance)
+        return ret
+
+    class Meta(ProductSerializer.Meta):
+        pass
 
 
 class ProductCreateSerializer(serializers.ModelSerializer):
