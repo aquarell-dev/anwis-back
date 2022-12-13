@@ -13,8 +13,8 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 
 from acceptance.models import Acceptance, Product, ProductSpecification, AcceptanceCategory, Box, Reason
-from acceptance.serializers import ProductSpecificationDetailedSerializer
-from china.models import Order, ProductInfo
+from acceptance.serializers import ProductSpecificationDetailedSerializer, ProductSpecificationSerializer
+from china.models import ProductInfo, Order
 from common.services import fetch_leftovers
 from documents.models import Document, Photo
 
@@ -329,12 +329,12 @@ def update_photos_from_wb(articles: list = None):
         products_to_be_updated.update(photo=photo)
 
 
-def _all_acceptances_w_this_box_finished(box_number: str):
+def _all_acceptances_w_this_box_finished(instance: ProductSpecification, box_number: str):
     # Есть ли приемки, в которых есть эта коробка, при том, что это приемка еще не завершена
     return len(Box.objects.filter(
-            box=box_number,
-            archive=False
-        )) < 1
+        box=box_number,
+        archive=False
+    ).exclude(specification=instance)) < 1
 
 
 def _box_in_this_specification_and_is_not_to_be_changed(specification: ProductSpecification, box: str, quantity: int):
@@ -346,13 +346,10 @@ def _box_in_this_specification_and_is_not_to_be_changed(specification: ProductSp
     :param quantity:
     :return:
     """
-    # Box.objects.filter()
     _box: Union[Box, None] = _does_entity_exist(Box, specification_id=specification.id, box=box)
 
     if not _box:
         return False
-
-    print(box, _box.quantity, quantity, _box.quantity == quantity)
 
     return _box.quantity != quantity
 
@@ -363,13 +360,16 @@ def _patch_boxes(boxes: list, specification: ProductSpecification):
         box_number = str(box.pop('box', None))
         quantity = int(box.pop('quantity', None))
 
-        acceptances_finished = _all_acceptances_w_this_box_finished(box_number)
+        acceptances_finished = _all_acceptances_w_this_box_finished(specification, box_number)
 
-        if not _box_in_this_specification_and_is_not_to_be_changed(specification, box_number, quantity):
-            if not acceptances_finished:
-                raise serializers.ValidationError(
-                    {'status': 'error', 'message': f'Есть активная приемка с этой коробкой{box_number, box_id}'}
-                )
+        # if not _box_in_this_specification_and_is_not_to_be_changed(specification, box_number, quantity):
+        if not acceptances_finished:
+            raise serializers.ValidationError(
+                {
+                    'status': 'error',
+                    'message': f'В этой коробке({box_number, box_id}) лежит другой товар, а та приемка еще не закончена'
+                }
+            )
 
         _box = _does_entity_exist(Box, id=int(box_id))
 
@@ -405,7 +405,11 @@ def update_specification(instance: ProductSpecification, data: dict):
     if reasons:
         _patch_reasons(reasons)
 
-    ProductSpecification.objects.filter(id=instance.id).update(**data)
+    serializer = ProductSpecificationSerializer(instance=instance, data=data, partial=True)
+
+    serializer.is_valid(raise_exception=True)
+
+    serializer.save()
 
     return instance
 

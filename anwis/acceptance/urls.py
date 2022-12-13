@@ -1,14 +1,39 @@
 from django.urls import path
 
-from acceptance.views import AcceptanceListCreateView, AcceptanceRetrieveUpdateDestroyView, StaffMemberListCreateView, \
-    StaffMemberRetrieveDestroyRetrieveView, ProductListCreateView, AcceptanceCreateFromOrder, AcceptanceUpdateFromOrder, \
-    CategoryDetailedView, CategoryView, ProductRetrieveDestroyUpdateView, GenerateLabelsView, \
-    UpdateProductLeftoversView, CreateMultipleProducts, ParsePhotosView, AcceptanceDetailedUpdate, \
-    UpdateProductColorsView, UpdateMultipleCategoriesView, DeleteMultipleProductsView, \
-    ProductSpecificationPartialUpdateView, AddBlankBoxToSpecification, RetrieveDeleteBoxView, \
-    ProductSpecificationPartialMultipleUpdateView, DeleteMultipleSpecificationsView, FindSpecificationByBox, \
-    FindSpecificationByBarcode, AddReasonToSpecification, RetrieveDeleteReasonView, CreateMultipleSpecificationsView, \
-    StatusListView, RetrieveBoxByBoxNumber, ProductRetrieveByBarcodeView
+from acceptance.views import (
+    AcceptanceListCreateView,
+    AcceptanceRetrieveUpdateDestroyView,
+    StaffMemberListCreateView,
+    StaffMemberRetrieveDestroyRetrieveView,
+    ProductListCreateView,
+    AcceptanceCreateFromOrder,
+    AcceptanceUpdateFromOrder,
+    CategoryDetailedView,
+    CategoryView,
+    ProductRetrieveDestroyUpdateView,
+    GenerateLabelsView,
+    UpdateProductLeftoversView,
+    CreateMultipleProducts,
+    ParsePhotosView,
+    AcceptanceDetailedUpdate,
+    UpdateProductColorsView,
+    UpdateMultipleCategoriesView,
+    DeleteMultipleProductsView,
+    ProductSpecificationPartialUpdateView,
+    AddBlankBoxToSpecification, RetrieveDeleteUpdateBoxView,
+    ProductSpecificationPartialMultipleUpdateView,
+    DeleteMultipleSpecificationsView,
+    FindSpecificationByBox,
+    FindSpecificationByBarcode,
+    AddReasonToSpecification,
+    RetrieveDeleteReasonView,
+    CreateMultipleSpecificationsView,
+    StatusListView,
+    RetrieveBoxByBoxNumber,
+    ProductRetrieveByBarcodeView,
+    StaffMemberUpdateDetailedView, WorkSessionRetrieveUpdateDeleteView, WorkSessionListByAcceptanceView,
+    RetrieveUpdatePaymentView, TimeSessionRetrieveUpdateDeleteView
+)
 
 urlpatterns = [
     path('acceptances/', AcceptanceListCreateView.as_view()),
@@ -19,6 +44,7 @@ urlpatterns = [
 
     path('acceptance/members/', StaffMemberListCreateView.as_view()),
     path('acceptance/members/<str:unique_number>/', StaffMemberRetrieveDestroyRetrieveView.as_view()),
+    path('acceptance/members/detailed-box/<str:unique_number>/', StaffMemberUpdateDetailedView.as_view()),
 
     path('acceptance/products/', ProductListCreateView.as_view()),
     path('acceptance/products/<int:pk>/', ProductRetrieveDestroyUpdateView.as_view()),
@@ -35,7 +61,7 @@ urlpatterns = [
 
     path('acceptance/statuses/', StatusListView.as_view()),
 
-    path('acceptance/box/<int:pk>/', RetrieveDeleteBoxView.as_view()),
+    path('acceptance/box/<int:pk>/', RetrieveDeleteUpdateBoxView.as_view()),
     path('acceptance/box/detailed/<str:box>/', RetrieveBoxByBoxNumber.as_view()),
 
     path('acceptance/reason/<int:pk>/', RetrieveDeleteReasonView.as_view()),
@@ -51,5 +77,12 @@ urlpatterns = [
     path('acceptance/delete-products/', DeleteMultipleProductsView.as_view()),
     path('acceptance/create-products/', CreateMultipleProducts.as_view()),
 
+    path('acceptance/work-session/<int:pk>/', WorkSessionRetrieveUpdateDeleteView.as_view()),
+    path('acceptance/work-session/', WorkSessionListByAcceptanceView.as_view()),
+
+    path('acceptance/time-session/<int:pk>/', TimeSessionRetrieveUpdateDeleteView.as_view()),
+
     path('acceptance/update-photos/', ParsePhotosView.as_view()),
+
+    path('acceptance/payment/<int:pk>/', RetrieveUpdatePaymentView.as_view()),
 ]

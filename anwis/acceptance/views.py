@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 from django.shortcuts import get_object_or_404
 from rest_framework import generics
 from rest_framework.request import Request
@@ -12,7 +14,7 @@ from acceptance.models import (
     ProductSpecification,
     Box,
     Reason,
-    AcceptanceStatus
+    AcceptanceStatus, WorkSession, Payment, TimeSession
 )
 from acceptance.serializers import (
     AcceptanceRetrieveSerializer,
@@ -21,13 +23,14 @@ from acceptance.serializers import (
     ProductSerializer,
     CategorySerializer,
     ProductCreateSerializer,
-    AcceptanceDetailedUpdateSerializer,
+    AcceptanceDetailedSerializer,
     ProductSpecificationSerializer,
     BoxSerializer,
     ReasonSerializer,
     AcceptanceStatusSerializer,
     StaffMemberCreateSerializer,
-    AcceptanceListSerializer, BoxDetailedSerializer, StaffMemberDetailedSerializer
+    AcceptanceListSerializer, BoxDetailedSerializer, StaffMemberDetailedSerializer, StaffMemberBoxDetailedSerializer,
+    WorkSessionSerializer, WorkSessionWithStaffSerializer, PaymentSerializer, TimeSessionSerializer
 )
 from acceptance.service import (
     create_acceptance_from_order,
@@ -105,7 +108,7 @@ class AcceptanceUpdateFromOrder(APIView):
 
 class AcceptanceDetailedUpdate(generics.UpdateAPIView):
     queryset = Acceptance.objects.all()
-    serializer_class = AcceptanceDetailedUpdateSerializer
+    serializer_class = AcceptanceDetailedSerializer
 
     def put(self, request, *args, **kwargs):
         return self.partial_update(request, *args, **kwargs)
@@ -203,7 +206,7 @@ class StaffMemberListCreateView(generics.ListCreateAPIView):
     def get_serializer_class(self):
         if self.request.method == 'POST':
             return StaffMemberCreateSerializer
-        return StaffMemberSerializer
+        return StaffMemberDetailedSerializer
 
 
 class StaffMemberRetrieveDestroyRetrieveView(generics.RetrieveUpdateDestroyAPIView):
@@ -218,6 +221,11 @@ class StaffMemberRetrieveDestroyRetrieveView(generics.RetrieveUpdateDestroyAPIVi
 
     def patch(self, request, *args, **kwargs):
         return self.partial_update(request, *args, **kwargs)
+
+
+class StaffMemberUpdateDetailedView(StaffMemberRetrieveDestroyRetrieveView):
+    def get_serializer_class(self):
+        return StaffMemberBoxDetailedSerializer
 
 
 # ***********************************************************************
@@ -405,9 +413,12 @@ class ParsePhotosView(APIView):
 # ***********************************************************************
 
 
-class RetrieveDeleteBoxView(generics.RetrieveDestroyAPIView):
+class RetrieveDeleteUpdateBoxView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Box.objects.all()
     serializer_class = BoxSerializer
+
+    def patch(self, request, *args, **kwargs):
+        return self.partial_update(request, *args, **kwargs)
 
 
 class RetrieveBoxByBoxNumber(generics.RetrieveAPIView):
@@ -428,3 +439,57 @@ class RetrieveBoxByBoxNumber(generics.RetrieveAPIView):
 class RetrieveDeleteReasonView(generics.RetrieveDestroyAPIView):
     queryset = Reason.objects.all()
     serializer_class = ReasonSerializer
+
+
+# ***********************************************************************
+# Session
+# ***********************************************************************
+
+
+class WorkSessionListByAcceptanceView(generics.ListAPIView):
+    serializer_class = WorkSessionWithStaffSerializer
+
+    def get_queryset(self):
+        queryset = WorkSession.objects.filter(legit=True)
+
+        acceptance = self.request.query_params.get('acceptance')
+        box = self.request.query_params.get('box')
+        today = self.request.query_params.get('today')
+
+        if acceptance is not None:
+            try:
+                int(acceptance)
+            except ValueError:
+                return Response({'error': 'provide acceptance id'}, status=400)
+
+            queryset = queryset.filter(box__specification__acceptance=int(acceptance), end__isnull=False)
+
+        if box is not None:
+            queryset = queryset.filter(box__box=str(box))
+
+        if today is not None and today == '1':
+            queryset = queryset.filter(
+                start__range=[datetime.today().strftime('%Y-%m-%d'),
+                              (datetime.today() + timedelta(hours=24)).strftime('%Y-%m-%d')])
+
+        return queryset
+
+
+class WorkSessionRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = WorkSession.objects.all()
+    serializer_class = WorkSessionSerializer
+
+
+class TimeSessionRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = TimeSession.objects.all()
+    serializer_class = TimeSessionSerializer
+
+
+# ***********************************************************************
+# Payment
+# ***********************************************************************
+
+
+class RetrieveUpdatePaymentView(generics.RetrieveUpdateAPIView):
+    serializer_class = PaymentSerializer
+    queryset = Payment.objects.all()

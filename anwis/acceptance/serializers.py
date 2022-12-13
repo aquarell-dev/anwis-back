@@ -4,9 +4,9 @@ from drf_writable_nested import WritableNestedModelSerializer
 from rest_framework import serializers
 
 from acceptance.models import Acceptance, StaffMember, AcceptanceCategory, Product, ProductSpecification, Box, Reason, \
-    AcceptanceStatus, Session
-from china.models import Order
-from common.serializers import TaskSerializer
+    AcceptanceStatus, WorkSession, TimeSession, Payment
+from china.models import Project
+from common.serializers import TaskSerializer, ProjectSerializer, IndividualEntrepreneurSerializer
 
 
 # ***********************************************************************
@@ -14,10 +14,16 @@ from common.serializers import TaskSerializer
 # ***********************************************************************
 
 
-class SessionSerializer(serializers.ModelSerializer):
+class WorkSessionSerializer(serializers.ModelSerializer):
     class Meta:
         fields = '__all__'
-        model = Session
+        model = WorkSession
+
+
+class TimeSessionSerializer(serializers.ModelSerializer):
+    class Meta:
+        fields = '__all__'
+        model = TimeSession
 
 
 # ***********************************************************************
@@ -25,25 +31,36 @@ class SessionSerializer(serializers.ModelSerializer):
 # ***********************************************************************
 
 
+class MinimalisticStaffSerializer(serializers.ModelSerializer):
+    class Meta:
+        fields = ('id', 'username', 'unique_number')
+        model = StaffMember
+
+
 class StaffMemberSerializer(WritableNestedModelSerializer, serializers.ModelSerializer):
-    session = SessionSerializer()
+    work_session = WorkSessionSerializer(allow_null=True)
+    time_session = TimeSessionSerializer(allow_null=True)
+    work_sessions = WorkSessionSerializer(many=True)
 
     class Meta:
         fields = '__all__'
         model = StaffMember
 
 
-class StaffMemberCreateSerializer(StaffMemberSerializer):
+class StaffMemberCreateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         unique_number = validated_data.pop('unique_number', None)
 
+        possible_unique_number = min([int(staff.unique_number) for staff in StaffMember.objects.all()])
+
         return StaffMember.objects.create(
             **validated_data,
-            unique_number=unique_number if unique_number else str(random.randint(1, 100))
+            unique_number=unique_number if unique_number else possible_unique_number
         )
 
     class Meta(StaffMemberSerializer.Meta):
-        pass
+        fields = '__all__'
+        model = StaffMember
 
 
 # ***********************************************************************
@@ -119,9 +136,26 @@ class ReasonSerializer(serializers.ModelSerializer):
 # ***********************************************************************
 
 
+class MinimalisticBoxSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Box
+        fields = ('id', 'box', 'finished', 'quantity')
+
+
 class BoxSerializer(serializers.ModelSerializer):
     class Meta:
         model = Box
+        fields = "__all__"
+
+
+# ***********************************************************************
+# Payment
+# ***********************************************************************
+
+
+class PaymentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Payment
         fields = "__all__"
 
 
@@ -162,12 +196,41 @@ class BoxDetailedSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class WorkSessionBoxDetailedSerializer(serializers.ModelSerializer):
+    box = BoxDetailedSerializer()
+
+    class Meta:
+        model = WorkSession
+        fields = '__all__'
+
+
+class WorkSessionWithStaffSerializer(WorkSessionBoxDetailedSerializer):
+    box = MinimalisticBoxSerializer()
+
+    def to_representation(self, instance: WorkSession):
+        ret = super(WorkSessionWithStaffSerializer, self).to_representation(instance)
+        s = MinimalisticStaffSerializer(StaffMember.objects.filter(work_sessions__in=[instance]).first())
+        ret.update({'staff': s.data})
+        return ret
+
+    class Meta(WorkSessionBoxDetailedSerializer.Meta):
+        pass
+
+
 class StaffMemberDetailedSerializer(serializers.ModelSerializer):
     box = BoxDetailedSerializer(read_only=True)
+    time_session = TimeSessionSerializer()
+    work_session = WorkSessionBoxDetailedSerializer()
+    time_sessions = TimeSessionSerializer(many=True, read_only=True)
+    work_sessions = WorkSessionBoxDetailedSerializer(many=True, read_only=True)
 
     class Meta:
         model = StaffMember
         fields = "__all__"
+
+
+class StaffMemberBoxDetailedSerializer(WritableNestedModelSerializer, StaffMemberDetailedSerializer):
+    box = BoxDetailedSerializer(read_only=False)
 
 
 # ***********************************************************************
@@ -196,8 +259,8 @@ class AcceptanceListSerializer(serializers.ModelSerializer):
 
 class AcceptanceRetrieveSerializer(serializers.ModelSerializer):
     specifications = ProductSpecificationDetailedSerializer(many=True, read_only=True)
-    individual = serializers.SerializerMethodField(read_only=True)
-    project = serializers.SerializerMethodField(read_only=True)
+    individual = IndividualEntrepreneurSerializer()
+    project = ProjectSerializer()
     tasks = TaskSerializer(many=True, read_only=True)
     documents = serializers.SerializerMethodField()
     status = AcceptanceStatusSerializer()
@@ -214,42 +277,21 @@ class AcceptanceRetrieveSerializer(serializers.ModelSerializer):
                 } for document in obj.documents.all()
             ]
 
-    def _get_order(self, obj: Acceptance):
-        if not obj.from_order:
-            return None
-
-        order = Order.objects.filter(id=obj.from_order)
-
-        if not order:
-            return None
-
-        return order[0]
-
-    def get_individual(self, obj: Acceptance):
-        order = self._get_order(obj)
-
-        return order.individual_entrepreneur.individual_entrepreneur if order else None
-
-    def get_project(self, obj: Acceptance):
-        order = self._get_order(obj)
-
-        return order.order_for_project.order_for_project if order else None
-
     class Meta:
         model = Acceptance
         fields = [
                      field.name for field in Acceptance._meta.get_fields()
                      if field.name not in ['order']
-                 ] + ['individual', 'project', 'documents']
+                 ] + ['documents']
 
 
-class AcceptanceDetailedUpdateSerializer(WritableNestedModelSerializer, serializers.ModelSerializer):
+class AcceptanceDetailedSerializer(WritableNestedModelSerializer, serializers.ModelSerializer):
     specifications = ProductSpecificationSerializer(many=True)
     tasks = TaskSerializer(many=True)
 
     class Meta:
-        model = Acceptance
         fields = '__all__'
+        model = Acceptance
 
 
 class AcceptanceCreateSerializer(WritableNestedModelSerializer, serializers.ModelSerializer):

@@ -2,7 +2,7 @@ from datetime import datetime
 
 from django.db import models
 
-from common.models import CommonProduct, CommonCategory, Task
+from common.models import CommonProduct, CommonCategory, Task, Project, IndividualEntrepreneur
 from documents.models import Photo, Document
 
 
@@ -87,14 +87,34 @@ class AcceptanceStatus(models.Model):
 class Session(models.Model):
     start = models.DateTimeField('Время Начала', default=datetime.now, blank=True)
     end = models.DateTimeField('Время Конца', null=True, blank=True)
-    quantity = models.PositiveSmallIntegerField('Кол-во упакованных', default=0)
+
+    class Meta:
+        abstract = True
+
+
+class WorkSession(Session):
+    #  Сессия по коробкам # TODO переименовать
+    box = models.ForeignKey('Box', verbose_name='Коробка', on_delete=models.CASCADE)
+    legit = models.BooleanField('Учитывать сессию', default=True)
+
+    def __str__(self):
+        return f'{self.box} - {self.start} -> {self.end}'
+
+    class Meta:
+        verbose_name = 'Рабочая Сессия'
+        verbose_name_plural = 'Рабочая Сессии'
+
+
+class TimeSession(Session):
+    break_start = models.DateTimeField('Время Начала Перерыва', null=True, blank=True)
+    break_end = models.DateTimeField('Время Конца Перерыва', null=True, blank=True)
 
     def __str__(self):
         return f'{self.start} -> {self.end}'
 
     class Meta:
-        verbose_name = 'Сессия'
-        verbose_name_plural = 'Сессии'
+        verbose_name = 'Сессия По Времени'
+        verbose_name_plural = 'Сессии По Времени'
 
 
 class Box(models.Model):
@@ -108,6 +128,7 @@ class Box(models.Model):
         null=True
     )
     archive = models.BooleanField('Архивная Коробка', default=False)
+    finished = models.BooleanField('Закончена', default=False)
 
     def __str__(self):
         return self.box
@@ -117,6 +138,18 @@ class Box(models.Model):
         verbose_name_plural = 'Коробки'
 
 
+class Payment(models.Model):
+    paid_break = models.PositiveSmallIntegerField('Оплачиваемый Перерыв', help_text='В минутах', default=0)
+    hour_cost = models.PositiveSmallIntegerField('Стоимость Одного Часа Сотрудника', help_text='В рублях', default=0)
+
+    def __str__(self):
+        return 'Оплата'
+
+    class Meta:
+        verbose_name = 'Оплата'
+        verbose_name_plural = 'Оплата'
+
+
 class StaffMember(models.Model):
     username = models.CharField('Юзер', max_length=264, unique=True)
     password = models.CharField('Пароль', max_length=264)
@@ -124,7 +157,14 @@ class StaffMember(models.Model):
     temporary = models.BooleanField('Временный', default=False)
     unique_number = models.CharField('Уникальный Номер', unique=True, max_length=64, null=True, blank=True)
     box = models.ForeignKey(Box, verbose_name='Коробка', on_delete=models.SET_NULL, blank=True, null=True)
-    session = models.ForeignKey(Session, verbose_name='Сессия', on_delete=models.SET_NULL, blank=True, null=True)
+    work_session = models.ForeignKey(WorkSession, verbose_name='Сессия По Коробкам', on_delete=models.SET_NULL,
+                                     blank=True, null=True, related_name='work')
+    time_session = models.ForeignKey(TimeSession, verbose_name='Сессия По Времени', on_delete=models.SET_NULL,
+                                     blank=True, null=True, related_name='time')
+
+    # to keep track of sessions by days, auto-clear after every start of new work
+    time_sessions = models.ManyToManyField(TimeSession, verbose_name='Временные Сессии', blank=True)
+    work_sessions = models.ManyToManyField(WorkSession, verbose_name='Рабочие Сессии', blank=True)
 
     def __str__(self):
         return self.username
@@ -135,8 +175,8 @@ class StaffMember(models.Model):
 
 
 class Acceptance(models.Model):
-    title = models.CharField('Название', max_length=64, blank=True)
-    cargo_number = models.CharField('Номер карго', max_length=264)
+    title = models.CharField('Название', max_length=64, blank=True, null=True)
+    cargo_number = models.CharField('Номер карго', max_length=264, blank=True, null=True)
     cargo_volume = models.CharField('Объем карго', null=True, blank=True, max_length=256)
     cargo_weight = models.CharField('Вес карго', null=True, blank=True, max_length=256)
     arrived_in_moscow = models.DateField('Дата приезда в Москву', blank=True, null=True)
@@ -150,6 +190,9 @@ class Acceptance(models.Model):
     documents = models.ManyToManyField(Document, verbose_name='Документы', blank=True)
     status = models.ForeignKey(AcceptanceStatus, verbose_name='Статус', to_field='status', default='Новая Приемка',
                                on_delete=models.PROTECT)
+    project = models.ForeignKey(Project, verbose_name='Проект', on_delete=models.SET_NULL, null=True, blank=True)
+    individual = models.ForeignKey(IndividualEntrepreneur, verbose_name='ИП', on_delete=models.SET_NULL, null=True,
+                                   blank=True)
 
     def __str__(self):
         return f'Приемка №{self.id}'

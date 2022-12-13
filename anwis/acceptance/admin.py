@@ -1,6 +1,7 @@
 from django.contrib import admin
 
-from acceptance.models import Acceptance, StaffMember, Product, AcceptanceCategory, Box, AcceptanceStatus, Session
+from acceptance.models import Acceptance, StaffMember, Product, AcceptanceCategory, Box, AcceptanceStatus, WorkSession, \
+    TimeSession, Payment
 from utils.mixins import PreviewColorMixin
 
 
@@ -14,7 +15,7 @@ class AcceptanceAdmin(admin.ModelAdmin):
 @admin.register(StaffMember)
 class StaffMemberAdmin(admin.ModelAdmin):
     list_display = [
-        field.name for field in StaffMember._meta.get_fields()
+        field.name for field in StaffMember._meta.get_fields() if field.name not in ['work_sessions', 'time_sessions']
     ]
     list_display_links = ['id']
 
@@ -32,7 +33,15 @@ class AcceptanceCategoryAdmin(admin.ModelAdmin):
 class BoxAdmin(admin.ModelAdmin):
     list_display = [
         field.name for field in Box._meta.get_fields()
-        if field.name not in ['productspecification', 'staffmember']
+        if field.name not in ['productspecification', 'staffmember', 'worksession']
+    ]
+    list_display_links = ['id']
+
+
+@admin.register(Payment)
+class PaymentAdmin(admin.ModelAdmin):
+    list_display = [
+        field.name for field in Payment._meta.get_fields()
     ]
     list_display_links = ['id']
 
@@ -49,7 +58,13 @@ class StatusAdmin(PreviewColorMixin, admin.ModelAdmin):
     list_display_links = ['id']
 
 
-@admin.register(Session)
+@admin.register(WorkSession)
 class SessionAdmin(admin.ModelAdmin):
-    list_display = ['id', 'start', 'end', 'quantity']
+    list_display = ['id', 'start', 'end', 'box']
+    list_display_links = ['id']
+
+
+@admin.register(TimeSession)
+class TimeSessionAdmin(admin.ModelAdmin):
+    list_display = ['id', 'start', 'end']
     list_display_links = ['id']
