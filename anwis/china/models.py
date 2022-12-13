@@ -1,19 +1,8 @@
 from django.db import models
 
 from acceptance.models import Acceptance
-from common.models import CommonProduct, CommonCategory, Task
+from common.models import CommonProduct, CommonCategory, Task, IndividualEntrepreneur, Project
 from documents.models import Photo, Document
-
-
-class IndividualEntrepreneur(models.Model):
-    individual_entrepreneur = models.CharField('ИП', max_length=80, unique=True)
-
-    def __str__(self):
-        return str(self.individual_entrepreneur)
-
-    class Meta:
-        verbose_name = 'Индивидуальный предприниматель'
-        verbose_name_plural = 'Индивидуальные предприниматели'
 
 
 class ChinaDistributor(models.Model):
@@ -25,17 +14,6 @@ class ChinaDistributor(models.Model):
     class Meta:
         verbose_name = 'Китайский посредник'
         verbose_name_plural = 'Китайские посредники'
-
-
-class OrderForProject(models.Model):
-    order_for_project = models.CharField('Заказ под проект', max_length=80, unique=True)
-
-    def __str__(self):
-        return str(self.order_for_project)
-
-    class Meta:
-        verbose_name = 'Заказ под проект'
-        verbose_name_plural = 'Заказы под проекты'
 
 
 class Status(models.Model):
@@ -97,7 +75,7 @@ class Order(models.Model):
                                                 on_delete=models.CASCADE)
     china_distributor = models.ForeignKey(ChinaDistributor, verbose_name='Китайский посредник',
                                           on_delete=models.PROTECT)
-    order_for_project = models.ForeignKey(OrderForProject, verbose_name='Заказ под проект',
+    order_for_project = models.ForeignKey(Project, verbose_name='Заказ под проект',
                                           on_delete=models.PROTECT)
     status = models.ForeignKey(Status, verbose_name='Статус',
                                on_delete=models.CASCADE)

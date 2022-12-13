@@ -1,11 +1,9 @@
 from drf_writable_nested import WritableNestedModelSerializer
 from rest_framework import serializers
 
-from acceptance.models import AcceptanceStatus
-from common.serializers import TaskSerializer
-from documents.serializers import DocumentMixin
-from .models import ChinaDistributor, Product, OrderForProject, Order, Status, IndividualEntrepreneur, ProductInfo,\
-    Category, Task
+from common.serializers import TaskSerializer, ProjectSerializer, IndividualEntrepreneurSerializer
+from .models import ChinaDistributor, Product, Project, Status, ProductInfo, \
+    Category, Order
 
 
 class ChinaSerializer(serializers.ModelSerializer):
@@ -14,22 +12,10 @@ class ChinaSerializer(serializers.ModelSerializer):
         model = ChinaDistributor
 
 
-class OrderForProjectSerializer(serializers.ModelSerializer):
-    class Meta:
-        fields = '__all__'
-        model = OrderForProject
-
-
 class StatusSerializer(serializers.ModelSerializer):
     class Meta:
         fields = '__all__'
         model = Status
-
-
-class IndividualEntrepreneurSerializer(serializers.ModelSerializer):
-    class Meta:
-        fields = '__all__'
-        model = IndividualEntrepreneur
 
 
 class ProductListRetrieveSerializer(serializers.ModelSerializer):
@@ -48,7 +34,8 @@ class ProductListRetrieveSerializer(serializers.ModelSerializer):
             return obj.photo.id
 
     class Meta:
-        fields = [field.name for field in Product._meta.get_fields() if field.name not in ['productinfo']] + ['photo_id']
+        fields = [field.name for field in Product._meta.get_fields() if field.name not in ['productinfo']] + [
+            'photo_id']
         model = Product
 
 
@@ -80,7 +67,7 @@ class CategorySerializer(serializers.ModelSerializer):
 class OrderListRetrieveSerializer(serializers.ModelSerializer):
     individual_entrepreneur = IndividualEntrepreneurSerializer()
     china_distributor = ChinaSerializer()
-    order_for_project = OrderForProjectSerializer()
+    order_for_project = ProjectSerializer()
     status = StatusSerializer()
     products = ProductQuantityDetailedSerializer(many=True)
     tasks = TaskSerializer(many=True)

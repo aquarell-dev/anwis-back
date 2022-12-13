@@ -5,8 +5,9 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from .models import ChinaDistributor, Product, OrderForProject, Order, Status, IndividualEntrepreneur, Category, Task
-from .serializer import ChinaSerializer, OrderForProjectSerializer, StatusSerializer, OrderCreateSerializer, \
+from common.serializers import ProjectSerializer
+from .models import ChinaDistributor, Product, Project, Project, Status, IndividualEntrepreneur, Category, Task, Order
+from .serializer import ChinaSerializer, StatusSerializer, OrderCreateSerializer, \
     OrderListRetrieveSerializer, IndividualEntrepreneurSerializer, ProductListRetrieveSerializer, CategorySerializer, \
     TaskSerializer, ProductCreateSerializer, OrderUpdateSerializer
 
@@ -112,21 +113,6 @@ class ChinaDistributorView(generics.ListCreateAPIView):
 class ChinaDistributorRetrieveDestroyUpdateView(generics.RetrieveUpdateDestroyAPIView):
     queryset = ChinaDistributor.objects.all()
     serializer_class = ChinaSerializer
-
-
-class OrderForProjectView(generics.ListCreateAPIView):
-    queryset = OrderForProject.objects.all()
-    serializer_class = OrderForProjectSerializer
-
-
-class OrderForProjectRetrieveDestroyUpdateView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = OrderForProject.objects.all()
-    serializer_class = OrderForProjectSerializer
-
-
-class IndividualEntrepreneurView(generics.ListCreateAPIView):
-    queryset = IndividualEntrepreneur.objects.all()
-    serializer_class = IndividualEntrepreneurSerializer
 
 
 class CategoryListCreateView(generics.ListCreateAPIView):

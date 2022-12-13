@@ -15,7 +15,7 @@ from django.core.files import File
 from rest_framework.generics import get_object_or_404
 from rest_framework.request import Request
 
-from china.models import Order, Product, ProductInfo
+from china.models import Project, Product, ProductInfo
 
 uppercase = string.ascii_uppercase
 
@@ -107,7 +107,7 @@ class ChinaService:
         for idx, title in enumerate(titles):
             worksheet.write(f'{uppercase[idx]}2', title, bg_purple_format)
 
-        order = get_object_or_404(Order.objects.all(), id=id)
+        order = get_object_or_404(Project.objects.all(), id=id)
 
         articles = [product.product.article for product in order.products.all()]
 

@@ -5,17 +5,11 @@ from .views import (
 
     ChinaDistributorView, ChinaDistributorRetrieveDestroyUpdateView,
 
-    OrderForProjectRetrieveDestroyUpdateView, OrderForProjectView,
-
     StatusView,
-
-    IndividualEntrepreneurView,
 
     ProductListCreateView, ProductUpdateView, ProductRetrieveDestroyView, ProductDestroyMultipleView,
 
     CategoryListCreateView, CategoryRetrieveUpdateDestroyView,
-
-
 
     FormExcelView,
 )
@@ -29,12 +23,7 @@ urlpatterns = [
     path('china-distributors/', ChinaDistributorView.as_view()),
     path('china-distributors/<int:pk>/', ChinaDistributorRetrieveDestroyUpdateView.as_view()),
 
-    path('order-for-projects/', OrderForProjectView.as_view()),
-    path('order-for-projects/<int:pk>/', OrderForProjectRetrieveDestroyUpdateView.as_view()),
-
     path('statuses/', StatusView.as_view()),
-
-    path('individual-entrepreneurs/', IndividualEntrepreneurView.as_view()),
 
     path('products/', ProductListCreateView.as_view()),
     path('products/partial/<int:pk>/', ProductUpdateView.as_view()),

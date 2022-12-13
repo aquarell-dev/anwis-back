@@ -2,8 +2,8 @@ from django.contrib import admin
 from django.utils.safestring import mark_safe
 
 from utils.mixins import ImagePreviewMixin, PreviewColorMixin
-from .models import ChinaDistributor, Product, OrderForProject, Order, Status, IndividualEntrepreneur, ProductInfo, \
-    Category
+from .models import ChinaDistributor, Product, Project, Project, Status, IndividualEntrepreneur, ProductInfo, \
+    Category, Order
 
 
 @admin.register(Status)
@@ -18,20 +18,6 @@ class ChinaDistributorAdmin(admin.ModelAdmin):
     list_display = [field.name for field in ChinaDistributor._meta.get_fields() if field.name not in ['order']]
     list_display_links = ['id']
     search_fields = ['id', 'china_distributor']
-
-
-@admin.register(OrderForProject)
-class OrderForProjectAdmin(admin.ModelAdmin):
-    list_display = [field.name for field in OrderForProject._meta.get_fields() if field.name not in ['order']]
-    list_display_links = ['id']
-    search_fields = ['id', 'order_for_project']
-
-
-@admin.register(IndividualEntrepreneur)
-class IndividualEntrepreneurAdmin(admin.ModelAdmin):
-    list_display = [field.name for field in IndividualEntrepreneur._meta.get_fields() if field.name not in ['order']]
-    list_display_links = ['id']
-    search_fields = ['id', 'individual_entrepreneur']
 
 
 @admin.register(Order)
