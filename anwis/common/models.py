@@ -29,3 +29,25 @@ class Task(models.Model):
     class Meta:
         verbose_name = 'Задача'
         verbose_name_plural = 'Задачи'
+
+
+class Project(models.Model):
+    project = models.CharField('Заказ под проект', max_length=80, unique=True)
+
+    def __str__(self):
+        return str(self.project)
+
+    class Meta:
+        verbose_name = 'Заказ под проект'
+        verbose_name_plural = 'Заказы под проекты'
+
+
+class IndividualEntrepreneur(models.Model):
+    individual_entrepreneur = models.CharField('ИП', max_length=80, unique=True)
+
+    def __str__(self):
+        return str(self.individual_entrepreneur)
+
+    class Meta:
+        verbose_name = 'Индивидуальный предприниматель'
+        verbose_name_plural = 'Индивидуальные предприниматели'
