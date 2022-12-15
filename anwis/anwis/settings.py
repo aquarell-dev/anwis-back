@@ -63,6 +63,7 @@ REST_FRAMEWORK = {
     'DATETIME_FORMAT': '%H:%M %d/%m/%Y',
     'DATE_FORMAT': '%d/%m/%Y',
     "DATE_INPUT_FORMATS": ["%d/%m/%Y"],
+    "DATETIME_INPUT_FORMATS": ["%Y-%m-%dT%H:%M", '%H:%M %d/%m/%Y'],
     'COERCE_DECIMAL_TO_STRING': False,
 }
 
