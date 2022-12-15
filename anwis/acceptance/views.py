@@ -36,7 +36,6 @@ from acceptance.serializers import (
 from acceptance.service import (
     create_acceptance_from_order,
     update_acceptance_from_order,
-    create_label,
     update_leftovers,
     update_colors,
     update_multiple_categories,
