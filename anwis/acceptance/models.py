@@ -43,10 +43,10 @@ class Product(CommonProduct):
                                  null=True)
     last_cost = models.FloatField('Себестоимость', blank=True, null=True)
     barcode = models.CharField('Штрих-код', max_length=100, null=True, blank=True)
-    wb_article = models.CharField('Артикул ВБ', max_length=100, null=True, blank=True)
     linked_china_product_article = models.CharField('Артикул Китайского Товара', max_length=100, blank=True, null=True)
     linked_china_product_size = models.CharField('Размер Китайского Товара', max_length=100, blank=True, null=True)
     total_left = models.PositiveIntegerField('Остаток', null=True, blank=True)
+    pdf = models.FileField('Этикетка ПДФ', upload_to='documents/', null=True, blank=True)
 
     def __str__(self):
         return str(self.id)
@@ -165,6 +165,7 @@ class StaffMember(models.Model):
     # to keep track of sessions by days, auto-clear after every start of new work
     time_sessions = models.ManyToManyField(TimeSession, verbose_name='Временные Сессии', blank=True)
     work_sessions = models.ManyToManyField(WorkSession, verbose_name='Рабочие Сессии', blank=True)
+    done = models.BooleanField('Закончен На Сегодня', default=False)
 
     def __str__(self):
         return self.username

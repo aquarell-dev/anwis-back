@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from typing import List
 
 from django.shortcuts import get_object_or_404
 from rest_framework import generics
@@ -43,7 +44,7 @@ from acceptance.service import (
     update_photos_from_wb,
     update_specification,
     get_specification_by_box,
-    get_specification_by_barcode, update_multiple_specifications
+    get_specification_by_barcode, update_multiple_specifications, create_labels
 )
 from china.models import Order
 from common.services import check_required_keys
@@ -336,19 +337,20 @@ class UpdateMultipleCategoriesView(APIView):
 
 
 class GenerateLabelsView(APIView):
-    def put(self, request: Request):
-        mandatory_fields = (
-            'title',
-            'barcode',
-            'article',
-            'size',
-            'color',
-            'quantity',
-            'individual',
-            'composition',
-            'address',
-            'category'
-        )
+    def post(self, request: Request):
+        mandatory_fields = [
+            # 'title',
+            # 'barcode',
+            # 'article',
+            # 'size',
+            # 'color',
+            # 'quantity',
+            # 'individual',
+            # 'composition',
+            # 'address',
+            # 'category',
+            'products'
+        ]
 
         for field in mandatory_fields:
             try:
@@ -356,9 +358,16 @@ class GenerateLabelsView(APIView):
             except KeyError:
                 return Response({'status': 'error', 'message': f'provide {field} field'}, status=400)
 
-        url = create_label(request.data)
+        products: List[Product] = create_labels(request.data)
 
-        return Response({'status': 'ok', 'url': request.build_absolute_uri(url)}, status=200)
+        return Response(
+            ProductSerializer(
+                products,
+                many=True,
+                context={'request': request, 'format': self.format_kwarg, 'view': self}
+            ).data,
+            status=200
+        )
 
 
 class UpdateProductLeftoversView(APIView):

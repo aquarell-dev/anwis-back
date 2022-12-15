@@ -143,6 +143,15 @@ def update_acceptance_from_order(acceptance: Acceptance, order: Order):
     return acceptance
 
 
+def create_labels(data: dict):
+    products: Union[list, None] = data.pop('products', None)
+
+    if not products and isinstance(products, list):
+        return Response({'error': 'no products or products is not a list'}, status=400)
+
+    return [create_label(product) for product in products]
+
+
 def create_label(data: dict):
     adult_category = str(data.pop('category')).lower() == 'товары для взрослых'
 
@@ -165,7 +174,7 @@ def create_label(data: dict):
     records = [
         dict(
             **data,
-            current_date=datetime.now().strftime('YY/MM/DD'),
+            current_date=datetime.now().strftime('%m/%d/%Y'),
             size=size if str(size) != '0' else '-'
         )
         for _ in range(int(quantity))
@@ -180,13 +189,15 @@ def create_label(data: dict):
         target=file_path,
     )
 
-    with open(file_path, 'rb') as f:
-        document = Document.objects.create(
-            title='pdf',
-            document=File(f, name=os.path.basename(f.name))
-        )
+    _id = data.pop('id', None)
 
-    return document.document.url
+    product = get_object_or_404(Product.objects.all(), id=int(_id) if _id else 99999999)
+
+    with open(file_path, 'rb') as f:
+        product.pdf = File(f, name=os.path.basename(f.name))
+        product.save()
+
+    return product
 
 
 def _get_total_quantity(sizes: dict, product_size: str) -> int:

@@ -51,7 +51,10 @@ class StaffMemberCreateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         unique_number = validated_data.pop('unique_number', None)
 
-        possible_unique_number = min([int(staff.unique_number) for staff in StaffMember.objects.all()])
+        try:
+            possible_unique_number = min([int(staff.unique_number) for staff in StaffMember.objects.all()])
+        except ValueError:
+            possible_unique_number = 1
 
         return StaffMember.objects.create(
             **validated_data,
