@@ -43,7 +43,7 @@ from acceptance.service import (
     update_photos_from_wb,
     update_specification,
     get_specification_by_box,
-    get_specification_by_barcode, update_multiple_specifications, create_labels
+    get_specification_by_barcode, update_multiple_specifications, create_labels, add_null_box
 )
 from china.models import Order
 from common.services import check_required_keys
@@ -139,11 +139,20 @@ class CreateMultipleSpecificationsView(APIView):
             return Response({'status': 'error', 'message': 'provide product ids'}, status=400)
 
         for product in products:
-            acceptance.specifications.create(
+            id = product.pop('product', None)
+
+            if not id:
+                continue
+
+            quantity = product.pop('quantity', 0)
+
+            specification = acceptance.specifications.create(
                 cost=0,
-                quantity=0,
-                product_id=int(product)
+                quantity=int(quantity),
+                product_id=int(id)
             )
+
+            add_null_box(specification)
 
         return Response({'status': 'ok'}, status=200)
 

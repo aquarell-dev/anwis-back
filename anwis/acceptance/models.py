@@ -118,7 +118,7 @@ class TimeSession(Session):
 
 
 class Box(models.Model):
-    box = models.CharField('Номер Коробки', max_length=24)
+    box = models.CharField('Номер Коробки', max_length=24, blank=True)
     quantity = models.PositiveIntegerField('Кол-во товаров в коробке')
     specification = models.ForeignKey(
         ProductSpecification,

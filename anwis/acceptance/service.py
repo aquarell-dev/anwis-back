@@ -16,7 +16,7 @@ from acceptance.models import Acceptance, Product, ProductSpecification, Accepta
 from acceptance.serializers import ProductSpecificationDetailedSerializer, ProductSpecificationSerializer
 from china.models import ProductInfo, Order
 from common.services import fetch_leftovers
-from documents.models import Document, Photo
+from documents.models import Photo
 
 
 def _does_entity_exist(model: Type[models.Model], **kwargs):
@@ -51,6 +51,10 @@ def _get_specification_by_product_id(product: Product):
 def _create_new_product(info: ProductInfo, order: Order) -> tuple:
     selfcost = _calculate_self_cost(info, order)
 
+    category = AcceptanceCategory.objects.get_or_create(category=info.product.category.category)[0] \
+        if info.product.category \
+        else None
+
     russian_product = Product.objects.create(
         photo=info.product.photo,
         linked_china_product_size=info.product.size,
@@ -61,7 +65,7 @@ def _create_new_product(info: ProductInfo, order: Order) -> tuple:
         brand=info.product.brand,
         last_cost=selfcost,
         title=info.product.title,
-        category=AcceptanceCategory.objects.get_or_create(category=info.product.category.category)[0]
+        category=category
     )
 
     return russian_product, selfcost, info.quantity
@@ -86,17 +90,20 @@ def _patch_or_add_missing_products(order: Order, acceptance: Acceptance):
             selfcost = _calculate_self_cost(specification, order)
 
             if not new_specification:
-                acceptance.specifications.add(
+                s = acceptance.specifications.add(
                     ProductSpecification.objects.create(
                         product=product,
                         cost=selfcost,
                         quantity=specification.quantity
                     )
                 )
+
+                add_null_box(s)
             else:
                 new_specification.quantity = specification.quantity
                 new_specification.cost = selfcost
                 new_specification.save()
+                add_null_box(new_specification)
                 already_existing_objs = [spec.id for spec in acceptance.specifications.all()]
                 acceptance.specifications.add(*already_existing_objs, new_specification.id)
 
@@ -104,11 +111,13 @@ def _patch_or_add_missing_products(order: Order, acceptance: Acceptance):
 
         product, selfcost, quantity = _create_new_product(specification, order)
 
-        acceptance.specifications.create(
+        s = acceptance.specifications.create(
             cost=selfcost,
             quantity=quantity,
             product=product
         )
+
+        add_null_box(s)
 
     acceptance.save()
 
@@ -300,6 +309,18 @@ def _get_photo_response(urls: list) -> requests.Response:
 
         if response.status_code == 200:
             return response
+
+
+def add_null_box(specification: ProductSpecification):
+    if len(specification.boxes.all()) > 0: return
+
+    box = Box.objects.create(
+        box='',
+        quantity=0,
+        specification_id=specification.id
+    )
+
+    specification.boxes.add(box.id)
 
 
 def update_photos_from_wb(articles: list = None):

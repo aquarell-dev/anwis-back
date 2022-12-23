@@ -254,9 +254,10 @@ class AcceptanceStatusSerializer(serializers.ModelSerializer):
 
 class AcceptanceListSerializer(serializers.ModelSerializer):
     specifications = ProductSpecificationDetailedSerializer(many=True, read_only=True)
+    status = AcceptanceStatusSerializer()
 
     class Meta:
-        fields = ['id', 'title', 'specifications', 'created_at', 'from_order']
+        fields = ['id', 'title', 'specifications', 'created_at', 'from_order', 'status']
         model = Acceptance
 
 
